@@ -1,0 +1,14 @@
+{
+  "endpoint": "/api/v1/",
+  "secrets": {
+    "huggingface": ""
+  },
+  "database": {
+    "active": "sqlite",
+    "users_table_name": "users",
+    "chat_table_name": "chat",
+    "sqlite": {
+      "db_filename": "jjdmdata"
+    }
+  }
+}
