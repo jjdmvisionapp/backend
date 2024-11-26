@@ -5,7 +5,8 @@ from typing import List, Optional
 from email_validator import validate_email, EmailNotValidError
 from werkzeug.security import generate_password_hash
 
-from db.types.exceptions.db_error import DBError
+from app.exceptions.invalid_data import InvalidData
+from db.db_adapter import DBAdapter
 from types.user import User
 
 
@@ -16,6 +17,9 @@ def user_to_dict(user: User):
     }
 
 class UserDataController:
+
+    def __init__(self, db_adaptor: DBAdapter):
+        self.db_adaptor = db_adaptor
 
     @abstractmethod
     def init_controller(self):
@@ -28,7 +32,7 @@ class UserDataController:
             hashed_password = generate_password_hash(password)
             return self._create_user_impl(username, email, hashed_password)
         except EmailNotValidError as e:
-            raise DBError("Email is not valid") from e
+            raise InvalidData
 
     @abstractmethod
     def _create_user_impl(self, username: str, email: str, password: str) -> User:

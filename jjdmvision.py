@@ -5,7 +5,7 @@ from flask import Flask, jsonify
 from flask_session import Session
 
 from app.data_resource_manager import DataResourceManager
-from app.exceptions.invalid_user_input import InvalidUserInput
+from app.exceptions.invalid_data import InvalidData
 from db.types.exceptions.db_error import DBError
 from routes.user.user import user_blueprint
 
@@ -23,7 +23,7 @@ def create_app():
 
     flask_app.register_blueprint(user_blueprint)
 
-    @flask_app.errorhandler(InvalidUserInput)
+    @flask_app.errorhandler(InvalidData)
     def handle_invalid_data(exception):
         if debug: flask_app.logger.exception(exception)
         message = {

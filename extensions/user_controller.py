@@ -1,5 +1,5 @@
 from db.debug.cache_user_controller import CacheUserController
-from db.sqlite.sqlite3_user_controller import SQLite3UserController
+from db.sqlite.user.sqlite3_user_controller import SQLite3UserController
 
 
 # chatgpt lol
