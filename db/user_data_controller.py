@@ -2,8 +2,10 @@ import json
 from abc import abstractmethod
 from typing import List, Optional
 
+from email_validator import validate_email, EmailNotValidError
 from werkzeug.security import generate_password_hash
 
+from db.types.exceptions.db_error import DBError
 from types.user import User
 
 
@@ -22,8 +24,13 @@ class UserDataController:
         pass
 
     def create_new_user(self, username: str, email: str, password: str) -> User:
-        hashed_password = generate_password_hash(password)
-        return self._create_user_impl(username, email, hashed_password)
+        try:
+            valid = validate_email(email)
+            email = valid.normalized_email
+            hashed_password = generate_password_hash(password)
+            return self._create_user_impl(username, email, hashed_password)
+        except EmailNotValidError as e:
+            raise DBError("Email is not valid") from e
 
     @abstractmethod
     def _create_user_impl(self, username: str, email: str, password: str) -> User:
