@@ -9,13 +9,11 @@ from db.types.exceptions.db_error import DBError
 from types.user import User
 
 
-def user_to_json(user: User):
-    to_dump = {
+def user_to_dict(user: User):
+    return {
         'id': user.id,
         'username': user.username,
     }
-    return json.dumps(to_dump)
-
 
 class UserDataController:
 
@@ -45,6 +43,10 @@ class UserDataController:
         pass
 
     @abstractmethod
+    def get_user_by_email(self, email: str) -> Optional[User]:
+        pass
+
+    @abstractmethod
     def get_all_users(self) -> List[User]:
         pass
 
@@ -56,7 +58,7 @@ class UserDataController:
     def shutdown_controller(self):
         pass
 
-    def json_to_user(self, json_str: str):
+    def json_to_user(self, json_str: str) -> Optional[User]:
         to_load = json.loads(json_str)
         return self.get_user_by_id(to_load['id'])
 

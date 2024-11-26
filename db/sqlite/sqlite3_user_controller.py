@@ -1,20 +1,9 @@
-import json
 import sqlite3
 from typing import List, Optional
-
-from werkzeug.security import generate_password_hash
 
 from db.types.exceptions.db_error import DBError
 from db.types.user import User
 from db.user_data_controller import UserDataController
-
-
-def user_to_json(user: User):
-    to_dump = {
-        "id": user.id,
-        "username": user.username,
-    }
-    return json.dumps(to_dump)
 
 
 class SQLite3UserController(UserDataController):
@@ -68,6 +57,9 @@ class SQLite3UserController(UserDataController):
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         return self._get_user_by_attrib('id')
 
+    def get_user_by_email(self, email: str) -> Optional[User]:
+        return self._get_user_by_attrib('email')
+
     def get_all_users(self) -> List[User]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -84,7 +76,3 @@ class SQLite3UserController(UserDataController):
 
     def shutdown_controller(self):
         pass
-
-    def json_to_user(self, json_str: str):
-        to_read = json.loads(json_str)
-        return self.get_user_by_id(to_read['id'])

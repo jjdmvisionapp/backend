@@ -1,7 +1,9 @@
 {
   "endpoint": "/api/v1/",
+  "debug": "true",
   "secrets": {
-    "huggingface": ""
+    "huggingface": "",
+    "session_token": ""
   },
   "database": {
     "active": "sqlite",
