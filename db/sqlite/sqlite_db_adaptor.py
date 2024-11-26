@@ -1,9 +1,9 @@
 import sqlite3
 
-from db.db_adapter import DBAdapter
+from db.db_adapter import DBAdaptor
 
 
-class SQLiteDBAdapter(DBAdapter):
+class SQLiteDBAdaptor(DBAdaptor):
 
     def __init__(self, db_file_name: str, user_table_name: str, chat_table_name: str):
         super().__init__(user_table_name, chat_table_name)

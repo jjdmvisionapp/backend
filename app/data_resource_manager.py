@@ -3,7 +3,7 @@ import threading
 from flask import Flask
 
 from db.debug.cache_user_controller import CacheUserController
-from db.sqlite.sqlite_db_adapter import SQLiteDBAdapter
+from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.sqlite.user.sqlite3_user_controller import SQLite3UserController
 from db.user_data_controller import UserDataController
 
@@ -32,7 +32,7 @@ class DataResourceManager:
 def _make_user_controller(app: Flask) -> UserDataController:
     active_db = app.config["database"]["active"]
     if active_db == "sqlite":
-        adaptor = SQLiteDBAdapter(app.config["database"]["sqlite"]["db_filename"],
+        adaptor = SQLiteDBAdaptor(app.config["database"]["sqlite"]["db_filename"],
                                   app.config["database"]["users_table_name"],
                                   app.config["database"]["chat_table_name"])
         return SQLite3UserController(

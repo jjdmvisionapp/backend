@@ -6,7 +6,7 @@ from email_validator import validate_email, EmailNotValidError
 from werkzeug.security import generate_password_hash
 
 from app.exceptions.invalid_data import InvalidData
-from db.db_adapter import DBAdapter
+from db.db_adapter import DBAdaptor
 from types.user import User
 
 
@@ -18,7 +18,7 @@ def user_to_dict(user: User):
 
 class UserDataController:
 
-    def __init__(self, db_adaptor: DBAdapter):
+    def __init__(self, db_adaptor: DBAdaptor):
         self.db_adaptor = db_adaptor
 
     @abstractmethod

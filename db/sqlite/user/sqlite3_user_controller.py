@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List, Optional
 
-from db.sqlite.sqlite_db_adapter import SQLiteDBAdapter
+from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.types.exceptions.db_error import DBError
 from db.types.user import User
 from db.user_data_controller import UserDataController
@@ -9,7 +9,7 @@ from db.user_data_controller import UserDataController
 
 class SQLite3UserController(UserDataController):
 
-    def __init__(self, db_adapter: SQLiteDBAdapter):
+    def __init__(self, db_adapter: SQLiteDBAdaptor):
         super().__init__(db_adapter)
 
     def _get_user_by_attrib(self, column_name) -> Optional[User]:
