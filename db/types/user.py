@@ -8,3 +8,4 @@ class User(frozen=True):
     email: str
     # hashed
     password: str
+    type: str

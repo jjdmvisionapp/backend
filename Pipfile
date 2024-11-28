@@ -9,6 +9,11 @@ flask = "*"
 flask-session = "*"
 flask-socketio = "*"
 eventlet = "*"
+flask-cors = "*"
+torch = "*"
+torchvision = "*"
+pillow = "*"
+requests = "*"
 
 [dev-packages]
 pytest = "*"

@@ -28,7 +28,7 @@ class UserDataController(DataController):
             raise InvalidData
 
     @abstractmethod
-    def _create_user_impl(self, username: str, email: str, password: str) -> User:
+    def _create_user_impl(self, username: str, email: str, password: str, user_type: str) -> User:
         pass
 
     @abstractmethod

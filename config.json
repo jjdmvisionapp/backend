@@ -5,6 +5,11 @@
     "huggingface": "",
     "session_token": ""
   },
+  "modules": {
+    "image_upload": {
+      "max_file_size": 1048576
+    }
+  },
   "database": {
     "active": "sqlite",
     "users_table_name": "users",

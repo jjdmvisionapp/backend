@@ -2,6 +2,7 @@ import json
 import secrets
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_session import Session
 
 from app.data_resource_manager import DataResourceManager
@@ -20,6 +21,7 @@ def create_app():
     flask_app.config["SECRET_KEY"] = secrets.token_hex(16)
     flask_app.config["SESSION_TYPE"] = "cachelib"
     Session(flask_app)
+    CORS(flask_app)
 
     flask_app.register_blueprint(user_blueprint)
 
