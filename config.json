@@ -7,6 +7,7 @@
   },
   "modules": {
     "image_upload": {
+      "upload_directory": "./images",
       "max_file_size": 1048576
     }
   },
@@ -14,6 +15,7 @@
     "active": "sqlite",
     "users_table_name": "users",
     "chat_table_name": "chat",
+    "images_table_name": "images",
     "sqlite": {
       "db_filename": "jjdmdata"
     }
