@@ -18,10 +18,6 @@ def user_to_dict(user: User):
 
 class UserDataController(DataController):
 
-    @abstractmethod
-    def init_controller(self):
-        pass
-
     def create_new_user(self, username: str, email: str, password: str) -> User:
         try:
             valid = validate_email(email)

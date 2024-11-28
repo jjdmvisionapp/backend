@@ -6,6 +6,9 @@ from db.user_data_controller import UserDataController
 
 class CacheUserController(UserDataController):
 
+    def get_user_by_email(self, email: str) -> Optional[User]:
+        pass
+
     def init_controller(self):
         pass
 
