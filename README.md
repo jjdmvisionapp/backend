@@ -8,6 +8,10 @@ Run `jjdmvision.py` to start the server.
 - pytest
 - flask-socketio 
 - eventlet
+- torch
+- torchvision
+- pillow
+- requests
 
 *It is advised to use Python 3.12 for the minute to prevent issues with packages.*
 
