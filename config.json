@@ -2,7 +2,7 @@
   "endpoint": "/api/v1/",
   "debug": "true",
   "secrets": {
-    "huggingface": "",
+    "huggingface": "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",
     "session_token": ""
   },
   "modules": {

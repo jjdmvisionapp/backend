@@ -1,18 +1,22 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+from typing import List
 
 from flask import current_app
 from flask_socketio import SocketIO
 
+from chatbots.chatbot_controller import ChatBotController
 from db.data_controller import DataController
 from db.db_adaptor import DBAdaptor
+from db.types.chat_message import ChatMessage
 from db.types.user import User
 
 
 # TODO: Maybe move socket io functions to a separate class
-class ChatDataController(DataController):
+class ChatDataController(DataController, ABC):
 
-    def __init__(self, db_adaptor: DBAdaptor):
+    def __init__(self, db_adaptor: DBAdaptor, chatbot: ChatBotController):
         super().__init__(db_adaptor)
+        self.chatbot_controller = chatbot
 
     def init_controller(self):
         socket = SocketIO(current_app, cors_allowed_origins="*")
@@ -20,15 +24,11 @@ class ChatDataController(DataController):
         def handle_message(json):
             pass
 
-    @abstractmethod
-    def _ask_chatbot(self, message):
-        pass
-
-    def send_message(self, from_user: User, to_user: User, message: str):
-        pass
+    # def send_message(self, from_user: User, to_user: User, message: str):
+    #     pass
 
     @abstractmethod
-    def load_chat_messages(self, user: User):
+    def load_chat_messages(self, user: User) -> List[ChatMessage]:
         pass
 
     @abstractmethod

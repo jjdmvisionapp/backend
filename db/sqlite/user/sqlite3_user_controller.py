@@ -1,18 +1,7 @@
-import sqlite3
-from typing import List, Optional
-
-from db import db_adaptor
-from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
-from db.types.exceptions.db_error import DBError
-from db.types.user import User
-from db.user_data_controller import UserDataController
-
-
 # User controller specifically for the sqlite dialect of SQL.
 import sqlite3
 from typing import List, Optional
 
-from db import db_adaptor
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.types.exceptions.db_error import DBError
 from db.types.user import User

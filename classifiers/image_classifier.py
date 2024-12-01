@@ -1,9 +1,9 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 import torch
 
 
-class ImageClassifier:
+class ImageClassifier(ABC):
 
     def __init__(self):
         self.model = self.load_model()  # Load the model during initialization
