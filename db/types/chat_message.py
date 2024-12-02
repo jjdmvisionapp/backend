@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-
-from db.types.user import User
+from datetime import datetime
 
 
 @dataclass
@@ -10,3 +9,4 @@ class ChatMessage:
     receiver_id: int
     message: str
     type: str
+    timestamp: datetime

@@ -33,7 +33,7 @@ class ChatDataController(DataController, ABC):
         pass
 
     @abstractmethod
-    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str):
+    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str, message_type: str):
         pass
 
     @abstractmethod

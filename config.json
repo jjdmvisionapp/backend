@@ -7,7 +7,7 @@
   },
   "modules": {
     "image_upload": {
-      "upload_directory": "./images",
+      "upload_directory": "/images",
       "max_file_size": 1048576
     }
   },

@@ -16,7 +16,7 @@ class SQLite3UserController(UserDataController):
         super().__init__(sqlite_adaptor)
         self.user_table_name = sqlite_adaptor.user_table_name
 
-    def _get_user_by_attrib(self, column_name: str, value) -> Optional[UserContainer]:
+    def _get_user_by_attrib(self, column_name: str, value) -> Optional[CompleteUser]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             query = f'SELECT * FROM {self.user_table_name} WHERE {column_name} = ?'
@@ -62,7 +62,7 @@ class SQLite3UserController(UserDataController):
         except sqlite3.IntegrityError as e:
             raise DBError("User with this username or email already exists.") from e
 
-    def get_user_by_username(self, username: str) -> Optional[UserContainer]:
+    def get_user_by_username(self, username: str) -> Optional[CompleteUser]:
         return self._get_user_by_attrib("user_username", username.lower())
 
     def get_user_by_id(self, user_id: int) -> Optional[UserContainer]:
@@ -94,6 +94,26 @@ class SQLite3UserController(UserDataController):
             cursor.execute(user_query, (user.id,))
             conn.commit()
 
+
+    # ChatGPT partially
+    def update_user(self, user_id: int, attribute: str, new_value):
+        # Validate the column name to prevent SQL injection
+        column = f'user_{attribute}'
+        valid_columns = {"user_username", "user_email", "user_password", "user_type"}
+        if column not in valid_columns:
+            raise DBError(f"Invalid column name: {column}")
+        try:
+            with self.db_adaptor.get_connection() as conn:
+                cursor = conn.cursor()
+                query = f'UPDATE {self.user_table_name} SET {column} = ? WHERE user_id = ?'
+                cursor.execute(query, (new_value, user_id))
+                if cursor.rowcount == 0:
+                    raise DBError(f"No user found with ID {user_id}.")
+                conn.commit()
+        except sqlite3.IntegrityError as e:
+            raise DBError("Error updating user. This might be due to a unique constraint violation.") from e
+
     def shutdown_controller(self):
         pass
+
 
