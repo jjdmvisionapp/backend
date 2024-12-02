@@ -1,21 +1,22 @@
 import sqlite3
 from typing import List
 
+from chatbots.chatbot_controller import ChatBotController
 from db.chat_data_controller import ChatDataController
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.types.chat_message import ChatMessage
 from db.types.exceptions.db_error import DBError
-from db.types.user import User
+from db.types.user.user_container import UserContainer
 
 
 class SQLite3ChatController(ChatDataController):
 
-    def __init__(self, sqlite_adaptor: SQLiteDBAdaptor):
-        super().__init__(sqlite_adaptor)
+    def __init__(self, sqlite_adaptor: SQLiteDBAdaptor, chatbot: ChatBotController):
+        super().__init__(sqlite_adaptor, chatbot)
         self.user_table_name = sqlite_adaptor.user_table_name
         self.chat_table_name = sqlite_adaptor.chat_table_name
 
-    def _save_chat_message_impl(self, from_user: User, to_user: User, message: str):
+    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str):
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
@@ -29,7 +30,7 @@ class SQLite3ChatController(ChatDataController):
         except sqlite3.IntegrityError as e:
             raise DBError("User with this username or email already exists.") from e
 
-    def load_chat_messages(self, user: User) -> List[ChatMessage]:
+    def load_chat_messages(self, user: UserContainer) -> List[ChatMessage]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             query = f'SELECT * FROM {self.chat_table_name} WHERE sender_id = ?'
@@ -46,6 +47,7 @@ class SQLite3ChatController(ChatDataController):
             ]
 
     def init_controller(self):
+        super().init_controller()
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             # Chat Table (stores messages between the user and the chatbot)
@@ -61,6 +63,14 @@ class SQLite3ChatController(ChatDataController):
                         ON DELETE CASCADE
                     )
                 ''')
+            conn.commit()
+
+
+    def delete_chat_message(self, message_id):
+        with self.db_adaptor.get_connection() as conn:
+            cursor = conn.cursor()
+            user_query = f'DELETE FROM {self.chat_table_name} WHERE message_id = ?'
+            cursor.execute(user_query, (message_id,))
             conn.commit()
 
 

@@ -4,7 +4,8 @@ from typing import List, Optional
 
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.types.exceptions.db_error import DBError
-from db.types.user import User
+from db.types.user.complete_user import CompleteUser
+from db.types.user.user_container import UserContainer
 from db.user_data_controller import UserDataController
 
 
@@ -15,13 +16,13 @@ class SQLite3UserController(UserDataController):
         super().__init__(sqlite_adaptor)
         self.user_table_name = sqlite_adaptor.user_table_name
 
-    def _get_user_by_attrib(self, column_name: str, value: str) -> Optional[User]:
+    def _get_user_by_attrib(self, column_name: str, value) -> Optional[UserContainer]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             query = f'SELECT * FROM {self.user_table_name} WHERE {column_name} = ?'
-            row = cursor.execute(query, (value.lower(),)).fetchone()
+            row = cursor.execute(query, (value,)).fetchone()
             if row:
-                return User(
+                return CompleteUser(
                     id=row['user_id'],
                     username=row['user_username'],
                     email=row['user_email'],
@@ -45,7 +46,7 @@ class SQLite3UserController(UserDataController):
             ''')
             conn.commit()
 
-    def _create_user_impl(self, username: str, email: str, password: str, user_type: str) -> User:
+    def _create_user_impl(self, username: str, email: str, password: str, user_type: str) -> UserContainer:
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
@@ -57,38 +58,26 @@ class SQLite3UserController(UserDataController):
                 cursor.execute(query, (username.lower(), email.lower(), password, user_type.lower()))
                 conn.commit()
                 last_inserted_id = cursor.lastrowid
-                return User(last_inserted_id, username.lower(), email.lower(), password, user_type.lower())
+                return CompleteUser(last_inserted_id, username.lower(), email.lower(), password, user_type.lower())
         except sqlite3.IntegrityError as e:
             raise DBError("User with this username or email already exists.") from e
 
-    def get_user_by_username(self, username: str) -> Optional[User]:
-        return self._get_user_by_attrib("user_username", username)
+    def get_user_by_username(self, username: str) -> Optional[UserContainer]:
+        return self._get_user_by_attrib("user_username", username.lower())
 
-    def get_user_by_id(self, user_id: int) -> Optional[User]:
-        with self.db_adaptor.get_connection() as conn:
-            cursor = conn.cursor()
-            query = f'SELECT * FROM {self.user_table_name} WHERE user_id = ?'
-            row = cursor.execute(query, (user_id,)).fetchone()
-            if row:
-                return User(
-                    id=row['user_id'],
-                    username=row['user_username'],
-                    email=row['user_email'],
-                    password=row['user_password'],
-                    type=row['user_type']  # Return string value of user_type
-                )
-            return None
+    def get_user_by_id(self, user_id: int) -> Optional[UserContainer]:
+        return self._get_user_by_attrib("id", id)
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
-        return self._get_user_by_attrib("user_email", email)
+    def get_user_by_email(self, email: str) -> Optional[UserContainer]:
+        return self._get_user_by_attrib("user_email", email.lower())
 
-    def get_all_users(self) -> List[User]:
+    def get_all_users(self) -> List[UserContainer]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             query = f'SELECT * FROM {self.user_table_name}'
             rows = cursor.execute(query).fetchall()
             return [
-                User(
+                CompleteUser(
                     id=row['user_id'],
                     username=row['user_username'],
                     email=row['user_email'],
@@ -98,11 +87,11 @@ class SQLite3UserController(UserDataController):
                 for row in rows
             ]
 
-    def delete_user(self, user_id: int):
+    def delete_user(self, user: UserContainer):
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             user_query = f'DELETE FROM {self.user_table_name} WHERE user_id = ?'
-            cursor.execute(user_query, (user_id,))
+            cursor.execute(user_query, (user.id,))
             conn.commit()
 
     def shutdown_controller(self):

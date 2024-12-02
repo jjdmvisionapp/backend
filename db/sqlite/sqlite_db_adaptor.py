@@ -11,6 +11,7 @@ class SQLiteDBAdaptor(DBAdaptor):
         # These can be optional. Check beforehand!
         self.user_table_name = kwargs.get("user_table_name")
         self.chat_table_name = kwargs.get("chat_table_name")
+        self.image_table_name = kwargs.get("image_table_name")
         self.db_file_name = db_file_name
 
     def get_connection(self):

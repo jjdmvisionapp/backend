@@ -8,7 +8,8 @@ from chatbots.chatbot_controller import ChatBotController
 from db.data_controller import DataController
 from db.db_adaptor import DBAdaptor
 from db.types.chat_message import ChatMessage
-from db.types.user import User
+
+from db.types.user.user_container import UserContainer
 
 
 # TODO: Maybe move socket io functions to a separate class
@@ -28,11 +29,15 @@ class ChatDataController(DataController, ABC):
     #     pass
 
     @abstractmethod
-    def load_chat_messages(self, user: User) -> List[ChatMessage]:
+    def load_chat_messages(self, user: UserContainer) -> List[ChatMessage]:
         pass
 
     @abstractmethod
-    def _save_chat_message_impl(self, from_user: User, to_user: User, message: str):
+    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str):
+        pass
+
+    @abstractmethod
+    def delete_chat_message(self, user: UserContainer):
         pass
 
 
