@@ -22,7 +22,7 @@ You should be able to use the Pipfile to get these all installed easily:
 
 ## Routes
 
-Here is what a route could return generically upon an error:[^1]
+[^1]: Here is what a route could return generically upon an error:
 
 HTTP 400 Bad Request
 
@@ -95,7 +95,7 @@ HTTP 200 OK
 
 **on fail:**
 
-[^1]: See here
+[^1]See here
 
 ---
 `/api/v1/user/update`
@@ -121,7 +121,7 @@ HTTP 200 OK
 
 **on fail:**
 
-[^1]: See here
+[^1]See here
 
 ---
 `/api/v1/user/@me`
@@ -155,7 +155,7 @@ HTTP 401 Internal Server Error
 }
 ```
 
-[^1]: See top of readme for the other errors
+[^1]See top of readme for the other errors
 
 ---
 `/api/v1/user/logout`
