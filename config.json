@@ -1,5 +1,6 @@
 {
   "endpoint": "/api/v1/",
+  "port": 8080,
   "debug": "true",
   "secrets": {
     "huggingface": "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",
@@ -9,6 +10,11 @@
     "image_upload": {
       "upload_directory": "/images",
       "max_file_size": 1048576
+    },
+    "image_recognition": {
+      "resnet": {
+        "image_resize": 256
+      }
     }
   },
   "database": {

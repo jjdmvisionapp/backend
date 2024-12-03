@@ -45,11 +45,11 @@ class UserDataController(DataController):
         return None
 
     @abstractmethod
-    def get_user_by_id(self, user_id: int) -> Optional[UserContainer]:
+    def get_user_by_id(self, user_id: int) -> Optional[CompleteUser]:
         pass
 
     @abstractmethod
-    def get_user_by_email(self, email: str) -> Optional[UserContainer]:
+    def get_user_by_email(self, email: str) -> Optional[CompleteUser]:
         pass
 
     @abstractmethod

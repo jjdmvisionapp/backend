@@ -2,6 +2,8 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
+from werkzeug.datastructures import FileStorage
+
 from db.image_data_controller import ImageDataController
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.types.exceptions.db_error import DBError
@@ -28,6 +30,7 @@ class SQLite3ImageController(ImageDataController):
                     image_name INTEGER,
                     image_width INTEGER,
                     image_height INTEGER,
+                    image_hash TEXT UNIQUE,
                     user_id INTEGER,
                     FOREIGN KEY (sender_id) REFERENCES {self.user_table_name}(user_id)
                     ON DELETE CASCADE
@@ -35,13 +38,13 @@ class SQLite3ImageController(ImageDataController):
             ''')
             conn.commit()
 
-    def _save_image_to_db(self, image_filename, image_width, image_height, user: UserContainer) -> Image:
+    def _save_image_to_db(self, image_filename, image_hash, image_width, image_height, user: UserContainer) -> Image:
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
                 query = f'''
                     INSERT INTO {self.image_table_name} 
-                    (image_name, image_width, image_height, user_id) 
+                    (image_name, image_width, image_height, image_hash, user_id) 
                     VALUES (?, ?, ?, ?)
                 '''
                 cursor.execute(query, (image_filename, image_width, image_height, user.id))
@@ -49,6 +52,14 @@ class SQLite3ImageController(ImageDataController):
                 return Image(cursor.lastrowid, image_filename, image_width, image_height)
         except sqlite3.IntegrityError as e:
             raise DBError("User with this username or email already exists.") from e
+
+    def _update_image_db(self, image_id, image_filename, image_hash, image_width, image_height, user: UserContainer) -> Optional[str]:
+        with self.db_adaptor.get_connection() as conn:
+            cursor = conn.cursor()
+            query = f'UPDATE {self.image_table_name} SET image_name = ?, image_width = ?, image_height = ?, image_hash = ? WHERE image_id = ? AND user_id = ?'
+            cursor.execute(query, (image_filename, image_width, image_height, image_hash, image_id, user.id))
+            conn.commit()
+            return cursor.rowcount > 0  # Returns True if a row was updated
 
     def get_image_from_db(self, user: UserContainer) -> Optional[Image]:
         with self.db_adaptor.get_connection() as conn:

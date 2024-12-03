@@ -8,7 +8,7 @@ from flask_session import Session
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
 from db.types.exceptions.db_error import DBError
-from routes.user.user import user_blueprint
+from routes.user import user_blueprint
 
 
 def create_app():

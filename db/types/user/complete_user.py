@@ -11,3 +11,9 @@ class CompleteUser(UserContainer, frozen=True):
     # hashed
     password: str
     type: str
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "username": self.username,
+            "email": self.email,
+        }

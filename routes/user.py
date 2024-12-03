@@ -3,9 +3,11 @@ from flask import Blueprint, request, current_app, jsonify, session
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
+from db.types.exceptions.db_error import DBError
 from routes.util import login_required
 
 user_blueprint = Blueprint('user', __name__, url_prefix=current_app.config["endpoint"] + '/user')
+
 
 @user_blueprint.route("/login", methods=["POST"])
 def login():
@@ -30,11 +32,11 @@ def login():
 
             valid_user = user_controller.validate_user(username, password, email)
             if valid_user:
-                    session["user_id"] = valid_user.id
-                    session["username"] = valid_user.username
-                    session["email"] = valid_user.email
-                    # Return a successful response (this can be a token or user info, depending on your app logic)
-                    return jsonify({"status": "success", "message": "Login successful"}), 200
+                session["user_id"] = valid_user.id
+                session["username"] = valid_user.username
+                session["email"] = valid_user.email
+                # Return a successful response (this can be a token or user info, depending on your app logic)
+                return jsonify({"status": "success", "message": "Login successful"}), 200
             else:
                 raise InvalidData
 
@@ -64,6 +66,7 @@ def register():
         else:
             raise InvalidData
 
+
 @login_required
 @user_blueprint.route("/update", methods=["POST"])
 def update():
@@ -71,12 +74,22 @@ def update():
         attribute = request.form.get("attribute")
         value = request.form.get("value")
         user_controller = DataResourceManager.get_user_data_controller(current_app)
-        user_controller.update_user(session["user_id"], attribute, value)
+        user_controller.update_user(session.get("user_id"), attribute, value)
+        return jsonify({"status": "success", "message": "Info update successful"}), 200
+
+
+@user_blueprint.route("/@me")
+def get_current_user():
+    user_id = session.get("user_id")  # Use .get() to safely access session keys
+    if not user_id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    user = DataResourceManager.get_user_data_controller(current_app).get_user_by_id(user_id)
+    if not user:
+        raise DBError("Logged in user not found")
+    return jsonify({"status": "success", "user": user.to_dict()}), 200
+
 
 @user_blueprint.route("/logout", methods=["POST", "GET"])
 def logout():
     session.clear()
     return jsonify({"status": "success", "message": "Logged out successfully"}), 200
-
-
-

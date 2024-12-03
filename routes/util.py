@@ -1,3 +1,4 @@
+import hashlib
 from functools import wraps
 from flask import session, jsonify
 
