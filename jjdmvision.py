@@ -1,6 +1,7 @@
 import json
 import secrets
 
+from cachelib import FileSystemCache
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_session import Session
@@ -20,6 +21,7 @@ def create_app():
 
     debug = flask_app.config["DEBUG"]
     flask_app.config["SECRET_KEY"] = secrets.token_hex(16)
+    flask_app.config["SESSION_CACHELIB"] = FileSystemCache(cache_dir='flask_session', threshold=500)
     flask_app.config["SESSION_TYPE"] = "cachelib"
     endpoint = flask_app.config["ENDPOINT"]
     Session(flask_app)
