@@ -2,5 +2,5 @@ from dataclasses import dataclass
 
 
 @dataclass
-class UserContainer(frozen=True):
+class UserContainer:
     id: int

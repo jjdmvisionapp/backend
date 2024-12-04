@@ -1,7 +1,6 @@
 # Define a class for image classification using ResNet
-import torch
-from torchvision import models, transforms
 from PIL import Image
+from torchvision import models, transforms
 
 from classifiers.image_classifier import ImageClassifier
 

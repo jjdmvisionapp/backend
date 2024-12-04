@@ -1,29 +1,29 @@
 {
-  "endpoint": "/api/v1/",
-  "port": 8080,
-  "debug": "true",
-  "secrets": {
-    "huggingface": "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",
-    "session_token": ""
+  "ENDPOINT": "/api/v1/",
+  "PORT": 8080,
+  "DEBUG": true,
+  "SECRETS": {
+    "HUGGINGFACE": "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",
+    "SESSION_TOKEN": ""
   },
-  "modules": {
-    "image_upload": {
-      "upload_directory": "/images",
-      "max_file_size": 1048576
+  "MODULES": {
+    "IMAGE_UPLOAD": {
+      "UPLOAD_DIRECTORY": "/images",
+      "MAX_FILE_SIZE": 5192
     },
-    "image_recognition": {
-      "resnet": {
-        "image_resize": 256
+    "IMAGE_RECOGNITION": {
+      "RESNET": {
+        "IMAGE_RESIZE": 256
       }
     }
   },
-  "database": {
-    "active": "sqlite",
-    "users_table_name": "users",
-    "chat_table_name": "chat",
-    "images_table_name": "images",
-    "sqlite": {
-      "db_filename": "jjdmdata"
+  "DATABASE": {
+    "ACTIVE": "sqlite",
+    "USERS_TABLE_NAME": "users",
+    "CHAT_TABLE_NAME": "chat",
+    "IMAGES_TABLE_NAME": "images",
+    "SQLITE": {
+      "DB_FILENAME": "jjdmdata"
     }
   }
 }

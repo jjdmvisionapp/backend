@@ -4,14 +4,14 @@ from app.data_resource_manager import DataResourceManager
 from db.types.user.user_container import UserContainer
 from routes.util import login_required
 
-chat_blueprint = Blueprint('user', __name__, url_prefix=current_app.config["endpoint"] + '/chat')
+chat_blueprint = Blueprint('user', __name__, url_prefix=current_app.config["ENDPOINT"] + '/chat')
 
 @login_required
 @chat_blueprint.route("/messages", methods=["GET"])
 def messages():
     if request.method == "GET":
         chat_controller = DataResourceManager.get_chat_data_controller(current_app)
-        user = UserContainer(session['user_id'])
+        user = UserContainer(session['USER_ID'])
 
         # Load chat messages
         chat_messages = chat_controller.load_chat_messages(user)

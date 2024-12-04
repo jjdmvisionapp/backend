@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 from typing import List
 
 from chatbots.chatbot_controller import ChatBotController
@@ -16,17 +17,31 @@ class SQLite3ChatController(ChatDataController):
         self.user_table_name = sqlite_adaptor.user_table_name
         self.chat_table_name = sqlite_adaptor.chat_table_name
 
-    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str, message_type: str):
+    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str,
+                                message_type: str) -> ChatMessage:
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
+                # Insert the message into the database
                 query = f'''
                     INSERT INTO {self.chat_table_name} 
                     (chat_content, sender_id, to_id, message_type) 
                     VALUES (?, ?, ?, ?)
                 '''
                 cursor.execute(query, (message, from_user.id, to_user.id if to_user else None, message_type))
+
+                # Fetch the timestamp for the inserted row
+                last_row_id = cursor.lastrowid
+                timestamp_query = f'''
+                    SELECT chat_timestamp FROM {self.chat_table_name} WHERE chat_id = ?
+                '''
+                cursor.execute(timestamp_query, (last_row_id,))
+                created_at_string = cursor.fetchone()["created_at"]
+                created_at = datetime.strptime(created_at_string, "%Y-%m-%d %H:%M:%S")
                 conn.commit()
+
+                # Return the ChatMessage with the timestamp
+                return ChatMessage(last_row_id, from_user.id, to_user.id, message, message_type, created_at)
         except sqlite3.IntegrityError as e:
             raise DBError("Failed to save chat message due to database integrity error.") from e
 
@@ -46,7 +61,7 @@ class SQLite3ChatController(ChatDataController):
                     receiver_id=row['to_id'],
                     type=row['message_type'],
                     message=row['chat_content'],
-                    timestamp=row['chat_timestamp'],
+                    timestamp=datetime.strptime(row['chat_timestamp'], "%Y-%m-%d %H:%M:%S"),
                 )
                 for row in rows
             ]

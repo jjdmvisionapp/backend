@@ -1,6 +1,7 @@
-import hashlib
 from functools import wraps
+
 from flask import session, jsonify
+
 
 # ChatGPT lol
 def login_required(func):

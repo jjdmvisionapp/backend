@@ -19,13 +19,13 @@ def user_to_dict(user: CompleteUser) -> dict:
 
 class UserDataController(DataController):
 
-    def create_new_user(self, username: str, email: str, password: str) -> CompleteUser:
+    def create_new_user(self, username: str, email: str, password: str, user_type: str) -> CompleteUser:
         try:
             valid = validate_email(email)
             email = valid.normalized_email
             hashed_password = generate_password_hash(password)
-            return self._create_user_impl(username, email, hashed_password)
-        except EmailNotValidError as e:
+            return self._create_user_impl(username, email, hashed_password, user_type)
+        except EmailNotValidError:
             raise InvalidData
 
     @abstractmethod

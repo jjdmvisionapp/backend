@@ -10,3 +10,12 @@ class ChatMessage:
     message: str
     type: str
     timestamp: datetime
+    def to_dict(self):
+        return {
+            "message_id": self.message_id,
+            "sender_id": self.sender_id,
+            "receiver_id": self.receiver_id,
+            "message": self.message,
+            "type": self.type,
+            "timestamp": self.timestamp,
+        }

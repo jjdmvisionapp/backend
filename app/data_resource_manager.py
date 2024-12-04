@@ -1,15 +1,15 @@
-import os
 import threading
 from pathlib import Path
 
 from flask import Flask
 
+from chatbots.huggingface.flan_t5_chatbot import FlanT5ChatBot
 from db.chat_data_controller import ChatDataController
 from db.image_data_controller import ImageDataController
-from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
-from db.sqlite.user.sqlite3_user_controller import SQLite3UserController
 from db.sqlite.chat.sqlite3_chat_controller import SQLite3ChatController
 from db.sqlite.image.sqlite3_image_controller import SQLite3ImageController
+from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
+from db.sqlite.user.sqlite3_user_controller import SQLite3UserController
 from db.user_data_controller import UserDataController
 
 
@@ -47,14 +47,14 @@ class DataResourceManager:
     @staticmethod
     def _set_db_adaptor(app: Flask):
         if DataResourceManager._db_adaptor is None:
-            active_db = app.config["database"]["active"]
+            active_db = app.config["ACTIVE"]
             if active_db == "sqlite":
-                db_config = app.config["database"]["sqlite"]
+                db_config = app.config["SQLITE"]
                 DataResourceManager._db_adaptor = SQLiteDBAdaptor(
-                    db_filename=db_config["db_filename"],
-                    user_table_name=app.config["database"]["users_table_name"],
-                    chat_table_name=app.config["database"]["chat_table_name"],
-                    image_table_name=app.config["database"]["image_table_name"]
+                    db_filename=db_config["DB_FILENAME"],
+                    user_table_name=app.config["USERS_TABLE_NAME"],
+                    chat_table_name=app.config["CHAT_TABLE_NAME"],
+                    image_table_name=app.config["IMAGE_TABLE_NAME"]
                 )
             else:
                 raise ValueError(f"Unsupported database adaptor: {active_db}")
@@ -65,12 +65,13 @@ class DataResourceManager:
             if DataResourceManager._db_adaptor is None:
                 DataResourceManager._set_db_adaptor(app)
             if controller_type == 'user' and DataResourceManager._user_data_controller is None:
-                DataResourceManager._user_data_controller = SQLite3UserController(DataResourceManager._db_adaptor)
+                DataResourceManager._user_data_controller = SQLite3UserController(DataResourceManager._db_adaptor).init_controller()
             elif controller_type == 'chat' and DataResourceManager._chat_data_controller is None:
-                DataResourceManager._chat_data_controller = SQLite3ChatController(DataResourceManager._db_adaptor)
+                chatbot = FlanT5ChatBot(app)
+                DataResourceManager._chat_data_controller = SQLite3ChatController(DataResourceManager._db_adaptor, chatbot).init_controller()
             elif controller_type == 'image' and DataResourceManager._image_data_controller is None:
-                path = Path(app.root_path) / Path(app.config["modules"]["image_upload"]["upload_directory"])
-                DataResourceManager._image_data_controller = SQLite3ImageController(DataResourceManager._db_adaptor, path)
+                path = Path(app.root_path) / Path(app.config["UPLOAD_DIRECTORY"])
+                DataResourceManager._image_data_controller = SQLite3ImageController(DataResourceManager._db_adaptor, path).init_controller()
             return {
                 'user': DataResourceManager._user_data_controller,
                 'chat': DataResourceManager._chat_data_controller,

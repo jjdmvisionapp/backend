@@ -2,11 +2,8 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
-from werkzeug.datastructures import FileStorage
-
 from db.image_data_controller import ImageDataController
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
-from db.types.exceptions.db_error import DBError
 from db.types.image import Image
 from db.types.user.user_container import UserContainer
 
@@ -31,6 +28,7 @@ class SQLite3ImageController(ImageDataController):
                     image_width INTEGER,
                     image_height INTEGER,
                     image_hash TEXT UNIQUE,
+                    image_mime TEXT,
                     user_id INTEGER,
                     FOREIGN KEY (sender_id) REFERENCES {self.user_table_name}(user_id)
                     ON DELETE CASCADE
@@ -38,30 +36,31 @@ class SQLite3ImageController(ImageDataController):
             ''')
             conn.commit()
 
-    def _save_image_to_db(self, image_filename, image_hash, image_width, image_height, user: UserContainer) -> Image:
+    def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Image:
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
                 query = f'''
                     INSERT INTO {self.image_table_name} 
-                    (image_name, image_width, image_height, image_hash, user_id) 
-                    VALUES (?, ?, ?, ?)
+                    (image_name, image_width, image_height, image_hash, image_mime, user_id) 
+                    VALUES (?, ?, ?, ?, ?, ?)
                 '''
-                cursor.execute(query, (image_filename, image_width, image_height, user.id))
+                cursor.execute(query, (image_filename, image_width, image_height, image_hash, image_mime, user.id))
                 conn.commit()
-                return Image(cursor.lastrowid, image_filename, image_width, image_height)
-        except sqlite3.IntegrityError as e:
-            raise DBError("User with this username or email already exists.") from e
+                return Image(cursor.lastrowid, image_filename, image_width, image_height, image_mime)
+        except sqlite3.IntegrityError:
+            return Image(cursor.lastrowid, image_filename, image_width, image_height, image_mime, False)
 
-    def _update_image_db(self, image_id, image_filename, image_hash, image_width, image_height, user: UserContainer) -> Optional[str]:
+
+    def _update_image_db(self, image_id, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Optional[str]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
-            query = f'UPDATE {self.image_table_name} SET image_name = ?, image_width = ?, image_height = ?, image_hash = ? WHERE image_id = ? AND user_id = ?'
-            cursor.execute(query, (image_filename, image_width, image_height, image_hash, image_id, user.id))
+            query = f'UPDATE {self.image_table_name} SET image_name = ?, image_width = ?, image_height = ?, image_hash = ?, image_mime = ? WHERE image_id = ? AND user_id = ?'
+            cursor.execute(query, (image_filename, image_width, image_height, image_hash, image_mime, image_id, user.id))
             conn.commit()
             return cursor.rowcount > 0  # Returns True if a row was updated
 
-    def get_image_from_db(self, user: UserContainer) -> Optional[Image]:
+    def _get_image_from_db(self, user: UserContainer) -> Optional[Image]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             query = f'SELECT * FROM {self.image_table_name} WHERE user_id = ?'
@@ -69,7 +68,7 @@ class SQLite3ImageController(ImageDataController):
             conn.commit()
             if row is None:  # Check if no result was returned
                 return None  # Return None or handle this case as needed
-            return Image(row["image_id"], row["image_name"], row["image_width"], row["image_height"])
+            return Image(row["IMAGE_ID"], row["IMAGE_NAME"], row["IMAGE_WIDTH"], row["IMAGE_HEIGHT"], row["IMAGE_MIME"])
 
     def delete_image(self, image_id: int):
         with self.db_adaptor.get_connection() as conn:

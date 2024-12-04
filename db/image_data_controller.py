@@ -26,29 +26,38 @@ class ImageDataController(DataController, ABC):
     def _write_image(self, image: FileStorage):
         image_name = str(uuid.uuid4())
         image = PILImage.open(image.file)
+        image_mime = image.get_format_mimetype()
         path = self.image_folder_path / image_name
         image.save(path)
-        get_image_hash(path)
-        return image_name, image.width, image.height, image
+        image_hash = get_image_hash(path)
+        return image_name, image.width, image.height, image_mime, image_hash
 
-    def save_image(self, image: FileStorage, user: UserContainer):
-        image_name, image_width, image_height = self._write_image(image)
-        self._save_image_to_db(image_name, image_width, image_width, user)
+    def save_image(self, image: FileStorage, user: UserContainer) -> Image:
+        image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
+        return self._save_image_to_db(image_name, image_width, image_width, image_hash, image_mime, user)
 
     def update_image(self, image_id: int, image: FileStorage, user: UserContainer):
-        image_name, image_width, image_height = self._write_image(image)
-        self._update_image_db(image_id, image_name, image_width, image_height, user)
+        image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
+        self._update_image_db(image_id, image_name, image_width, image_height, image_hash, image_mime, user)
 
     @abstractmethod
-    def _save_image_to_db(self, image_filename, image_width, image_height, user: UserContainer) -> Image:
+    def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Image:
+        pass
+
+
+    def get_image_path(self, user: UserContainer):
+        image = self._get_image_from_db(user)
+        if image is not None:
+            return self.image_folder_path / image.relative_filepath, image.mime
+        return None
+
+    @abstractmethod
+    def _get_image_from_db(self, user: UserContainer) -> Optional[Image]:
         pass
 
     @abstractmethod
-    def get_image_from_db(self, user: UserContainer) -> Optional[Image]:
+    def _update_image_db(self, image_id, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Optional[str]:
         pass
-
-    @abstractmethod
-    def _update_image_db(self, image_id, image_filename, image_width, image_height, image_hash, user: UserContainer) -> Optional[str]:
 
     @abstractmethod
     def delete_image(self, image_id: int):
