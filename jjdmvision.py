@@ -56,4 +56,4 @@ def create_app():
 
 if __name__ == '__main__':
     jjdm = create_app()
-    jjdm.run()
+    jjdm.run(port=jjdm.config["PORT"])
