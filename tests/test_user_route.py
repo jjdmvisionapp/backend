@@ -122,9 +122,9 @@ def test_update_user_info(client, app, endpoint, port):
     login_url = f"http://localhost:{port}{endpoint}user/login"
 
     # Login as user 1
-    #login_response = login_user(client, login_url, "test@test.com", "username", "testpassword")
-    #assert login_response.status_code == 200
-    #assert login_response.json.get("status") == "success"
+    login_response = login_user(client, login_url, "test@test.com", "username", "testpassword")
+    assert login_response.status_code == 200
+    assert login_response.json.get("status") == "success"
 
     # Perform update as user 1
     update_url = f"http://localhost:{port}{endpoint}user/update"
