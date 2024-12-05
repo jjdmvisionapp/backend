@@ -116,3 +116,24 @@ def test_session(client, app, endpoint, port):
         # Access the user ID from the session in the login response
         assert me_response.json.get("user")["id"] == login_response.json.get("session").get("id")
 
+
+def test_update_user_info(client, app, endpoint, port):
+    # First, register a new user and log them in
+    login_url = f"http://localhost:{port}{endpoint}user/login"
+
+    # Login as user 1
+    #login_response = login_user(client, login_url, "test@test.com", "username", "testpassword")
+    #assert login_response.status_code == 200
+    #assert login_response.json.get("status") == "success"
+
+    # Perform update as user 1
+    update_url = f"http://localhost:{port}{endpoint}user/update"
+    update_data = {"user_username": "josh"}
+
+    update_response = client.post(update_url, data=update_data)
+
+    assert update_response.status_code == 200
+    assert update_response.json.get("status") == "success"
+    assert update_response.json.get("message") == "Info update successful"
+
+

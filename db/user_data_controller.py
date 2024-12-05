@@ -60,7 +60,7 @@ class UserDataController(DataController):
         pass
 
     @abstractmethod
-    def update_user(self, user_id: int, attribute: str, new_value):
+    def update_user(self, user: UserContainer, attributes: dict[str, str]):
         pass
 
     @abstractmethod

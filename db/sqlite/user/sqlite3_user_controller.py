@@ -98,20 +98,23 @@ class SQLite3UserController(UserDataController):
 
 
     # ChatGPT partially
-    def update_user(self, user_id: int, attribute: str, new_value):
+    def update_user(self, user: UserContainer, attributes: dict[str, str]):
         # Validate the column name to prevent SQL injection
-        column = f'user_{attribute}'
         valid_columns = {"user_username", "user_email", "user_password", "user_type"}
-        if column not in valid_columns:
-            raise DBError(f"Invalid column name: {column}")
+        # Find invalid keys that are not in the valid_columns set
+        invalid_keys = set(attributes.keys()) - valid_columns
+        if invalid_keys:
+            # Raise an error with a message listing the invalid keys
+            raise DBError(f"Invalid column names: {', '.join(invalid_keys)}")
         try:
             with self.db_adaptor.get_connection() as conn:
-                cursor = conn.cursor()
-                query = f'UPDATE {self.user_table_name} SET {column} = ? WHERE user_id = ?'
-                cursor.execute(query, (new_value, user_id))
-                if cursor.rowcount == 0:
-                    raise DBError(f"No user found with ID {user_id}.")
-                conn.commit()
+                for attribute, value in attributes.items():
+                    cursor = conn.cursor()
+                    query = f'UPDATE {self.user_table_name} SET {attribute} = ? WHERE user_id = ?'
+                    cursor.execute(query, (value, user.id))
+                    if cursor.rowcount == 0:
+                        raise InvalidData(f"No user found with ID {user.id}.")
+                    conn.commit()
         except sqlite3.IntegrityError as e:
             raise DBError("Error updating user. This might be due to a unique constraint violation.") from e
 

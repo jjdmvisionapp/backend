@@ -21,7 +21,9 @@ def create_images_blueprint(endpoint):
         max_size = current_app.config["MAX_FILE_SIZE"]
         if image_file.mimetype not in ['image/png', 'image/jpeg'] or image_file.content_length > max_size:
             raise InvalidData("Invalid mime type")
-        user_id = session.get('user_id')
+        user_id = session.get('USER_ID')
+        if user_id is None:
+            raise InvalidData("User ID not found")
         image_controller = DataResourceManager.get_image_data_controller(current_app)
         saved_image = image_controller.save_image(image_file, UserContainer(user_id))
         if not saved_image.unique:

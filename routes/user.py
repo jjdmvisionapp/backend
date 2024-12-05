@@ -69,17 +69,16 @@ def create_user_blueprint(base_endpoint):
     @login_required
     @user_blueprint.route("/update", methods=["POST"])
     def update():
+        print(session)
         if request.method == "POST":
-            attribute = request.form.get("attribute")
-            value = request.form.get("value")
+            attributes = request.form
             user_controller = DataResourceManager.get_user_data_controller(current_app)
-            user_controller.update_user(session.get("user_id"), attribute, value)
+            user_controller.update_user(session.get("USER_ID"), attributes)
             return jsonify({"status": "success", "message": "Info update successful"}), 200
 
     @user_blueprint.route("/@me")
     def get_current_user():
-        user_id = session.get("USER_ID")
-        print(session)# Use .get() to safely access session keys
+        user_id = session.get("USER_ID")# Use .get() to safely access session keys
         if not user_id:
             return jsonify({"status": "error", "message": "Unauthorized"}), 401
         user = DataResourceManager.get_user_data_controller(current_app).get_user_by_id(user_id)
@@ -87,6 +86,8 @@ def create_user_blueprint(base_endpoint):
             raise DBError("Logged in user not found")
         return jsonify({"status": "success", "user": user.to_dict()}), 200
 
+
+    @login_required
     @user_blueprint.route("/logout", methods=["POST", "GET"])
     def logout():
         session.clear()
