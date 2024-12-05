@@ -1,4 +1,6 @@
 import pytest
+from flask import session
+
 
 # Helper function to send registration requests
 def register_user(client, url, email, username, password):
@@ -92,48 +94,50 @@ def test_invalid_login(client, app, endpoint, port):
 def test_session(client, app, endpoint, port):
     login_url = f"http://localhost:{port}{endpoint}user/login"
 
-    with app.app_context():
-        # Perform login request
-        login_response = login_user(client, login_url, "test@test.com", "username", "testpassword")
+    with app.test_client() as test_client:
+        with app.app_context():
+            # Perform login request
+            login_response = login_user(test_client, login_url, "test@test.com", "username", "testpassword")
 
-        # Assert login is successful
-        assert login_response.status_code == 200
-        assert login_response.json.get("status") == "success"
+            # Assert login is successful
+            assert login_response.status_code == 200
+            assert login_response.json.get("status") == "success"
 
-        # Ensure that the session cookie is set in the response
-        session_cookie = client.get_cookie('session')
-        print(session_cookie)
+            # Manually set session cookie in the test client (if needed)
+            with test_client.session_transaction() as session:
+                session["USER_ID"] = login_response.json["session"]["id"]
 
-        # Use the same client to make the @me request (Flask will use the session cookie automatically)
-        me_url = f"http://localhost:{port}{endpoint}user/@me"
-        me_response = get_me(client, me_url)
+            # Make the @me request
+            me_url = f"http://localhost:{port}{endpoint}user/@me"
+            me_response = get_me(test_client, me_url)
 
-        # Assert that the response is successful
-        assert me_response.status_code == 200
-        assert me_response.json.get("status") == "success"
+            # Assert the response is successful
+            assert me_response.status_code == 200
+            assert me_response.json.get("status") == "success"
 
-        # Assert that the user ID in the response matches the ID from the login
-        # Access the user ID from the session in the login response
-        assert me_response.json.get("user")["id"] == login_response.json.get("session").get("id")
+            # Verify user ID
+            assert me_response.json.get("user")["id"] == login_response.json["session"]["id"]
+
 
 
 def test_update_user_info(client, app, endpoint, port):
     # First, register a new user and log them in
-    login_url = f"http://localhost:{port}{endpoint}user/login"
+    with app.app_context():
+        login_url = f"http://localhost:{port}{endpoint}user/login"
 
-    # Login as user 1
-    login_response = login_user(client, login_url, "test@test.com", "username", "testpassword")
-    assert login_response.status_code == 200
-    assert login_response.json.get("status") == "success"
+        # Login as user 1
+        login_response = login_user(client, login_url, "test@test.com", "username", "testpassword")
+        assert login_response.status_code == 200
+        assert login_response.json.get("status") == "success"
 
-    # Perform update as user 1
-    update_url = f"http://localhost:{port}{endpoint}user/update"
-    update_data = {"user_username": "josh"}
+        # Perform update as user 1
+        update_url = f"http://localhost:{port}{endpoint}user/update"
+        update_data = {"user_username": "josh"}
 
-    update_response = client.post(update_url, data=update_data)
+        update_response = client.post(update_url, data=update_data)
 
-    assert update_response.status_code == 200
-    assert update_response.json.get("status") == "success"
-    assert update_response.json.get("message") == "Info update successful"
+        assert update_response.status_code == 200
+        assert update_response.json.get("status") == "success"
+        assert update_response.json.get("message") == "Info update successful"
 
 

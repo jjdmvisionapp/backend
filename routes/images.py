@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, request, jsonify, session, send_file
+from flask import Blueprint, current_app, request, jsonify, session, send_file, g
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -14,7 +14,8 @@ def create_images_blueprint(endpoint):
 
     @login_required
     @images_blueprint.route('/upload', methods=['POST'])
-    def images(user_id):
+    def images():
+        user_id = g.get("USER_ID")
         if 'file' not in request.files:
             return jsonify({"status": "error", "message": "No image upload"}), 400
         image_file = request.files["IMAGE"]
@@ -29,7 +30,8 @@ def create_images_blueprint(endpoint):
 
     @login_required
     @images_blueprint.route('/get', methods=['GET'])
-    def get_image(user_id):
+    def get_image():
+        user_id = g.get("USER_ID")
         image_controller = DataResourceManager.get_image_data_controller(current_app)
         path, mime = image_controller.get_image_path(UserContainer(user_id))
         if path and mime is not None:

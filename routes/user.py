@@ -1,5 +1,5 @@
 from email_validator import validate_email, EmailNotValidError
-from flask import Blueprint, request, current_app, jsonify, session
+from flask import Blueprint, request, current_app, jsonify, session, g
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -9,7 +9,6 @@ from routes.util import login_required
 
 
 def create_user_blueprint(base_endpoint):
-
     user_blueprint = Blueprint('user', __name__, url_prefix=base_endpoint + '/user')
 
     @user_blueprint.route("/login", methods=["POST"])
@@ -38,7 +37,8 @@ def create_user_blueprint(base_endpoint):
                     session["USERNAME"] = valid_user.username
                     session["EMAIL"] = valid_user.email
                     # Return a successful response (this can be a token or user info, depending on your app logic)
-                    return jsonify({"status": "success", "message": "Login successful", "session": valid_user.to_dict()}), 200
+                    return jsonify(
+                        {"status": "success", "message": "Login successful", "session": valid_user.to_dict()}), 200
                 else:
                     raise InvalidData("Incorrect login")
 
@@ -65,32 +65,31 @@ def create_user_blueprint(base_endpoint):
                 session["email"] = user.email
                 return jsonify({"status": "success", "message": "Registration successful"}), 200
             else:
-                raise DBError("Missing user")
+                raise DBError("Fatal error")
 
-    @login_required
     @user_blueprint.route("/update", methods=["POST"])
-    def update(user_id):
+    @login_required
+    def update():
+        user_id = g.get("USER_ID")
         if request.method == "POST":
             attributes = request.form
             user_controller = DataResourceManager.get_user_data_controller(current_app)
             user_controller.update_user(UserContainer(user_id), attributes)
             return jsonify({"status": "success", "message": "Info update successful"}), 200
 
-
-    @login_required
     @user_blueprint.route("/@me")
-    def get_current_user(user_id):
+    @login_required
+    def get_current_user():
+        user_id = g.get("USER_ID")
         user = DataResourceManager.get_user_data_controller(current_app).get_user_by_id(user_id)
         if not user:
-            raise DBError("Logged in user not found")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 401
         return jsonify({"status": "success", "user": user.to_dict()}), 200
 
-
-    @login_required
     @user_blueprint.route("/logout", methods=["POST", "GET"])
+    @login_required
     def logout():
         session.clear()
         return jsonify({"status": "success", "message": "Logged out successfully"}), 200
-
 
     return user_blueprint
