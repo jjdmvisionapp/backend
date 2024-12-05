@@ -1,9 +1,8 @@
-from flask import Blueprint, request, current_app, session, jsonify
+from flask import Blueprint, request, current_app, jsonify
 
 from app.data_resource_manager import DataResourceManager
 from db.types.user.user_container import UserContainer
 from routes.util import login_required
-
 
 
 def create_chat_blueprint(blueprint):
@@ -12,10 +11,10 @@ def create_chat_blueprint(blueprint):
 
     @login_required
     @chat_blueprint.route("/messages", methods=["GET"])
-    def messages():
+    def messages(user_id):
         if request.method == "GET":
             chat_controller = DataResourceManager.get_chat_data_controller(current_app)
-            user = UserContainer(session['USER_ID'])
+            user = UserContainer(user_id)
 
             # Load chat messages
             chat_messages = chat_controller.load_chat_messages(user)

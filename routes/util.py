@@ -1,14 +1,13 @@
 from functools import wraps
-
 from flask import session, jsonify
 
-
-# ChatGPT lol
 def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Check if 'username' or 'email' is in the session
-        if "username" not in session or "email" not in session:
+        # Check if 'USER_ID' is in the session
+        user_id = session.get("USER_ID")
+        if not user_id:
             return jsonify({"status": "error", "message": "Authentication required"}), 401
-        return func(*args, **kwargs)
+        # Pass user_id to the wrapped function
+        return func(user_id=user_id, *args, **kwargs)
     return wrapper

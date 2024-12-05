@@ -4,6 +4,7 @@ from flask import Blueprint, request, current_app, jsonify, session
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
 from db.types.exceptions.db_error import DBError
+from db.types.user.user_container import UserContainer
 from routes.util import login_required
 
 
@@ -68,19 +69,17 @@ def create_user_blueprint(base_endpoint):
 
     @login_required
     @user_blueprint.route("/update", methods=["POST"])
-    def update():
-        print(session)
+    def update(user_id):
         if request.method == "POST":
             attributes = request.form
             user_controller = DataResourceManager.get_user_data_controller(current_app)
-            user_controller.update_user(session.get("USER_ID"), attributes)
+            user_controller.update_user(UserContainer(user_id), attributes)
             return jsonify({"status": "success", "message": "Info update successful"}), 200
 
+
+    @login_required
     @user_blueprint.route("/@me")
-    def get_current_user():
-        user_id = session.get("USER_ID")# Use .get() to safely access session keys
-        if not user_id:
-            return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    def get_current_user(user_id):
         user = DataResourceManager.get_user_data_controller(current_app).get_user_by_id(user_id)
         if not user:
             raise DBError("Logged in user not found")

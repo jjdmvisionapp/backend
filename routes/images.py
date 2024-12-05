@@ -14,25 +14,22 @@ def create_images_blueprint(endpoint):
 
     @login_required
     @images_blueprint.route('/upload', methods=['POST'])
-    def images():
+    def images(user_id):
         if 'file' not in request.files:
             return jsonify({"status": "error", "message": "No image upload"}), 400
         image_file = request.files["IMAGE"]
         max_size = current_app.config["MAX_FILE_SIZE"]
         if image_file.mimetype not in ['image/png', 'image/jpeg'] or image_file.content_length > max_size:
             raise InvalidData("Invalid mime type")
-        user_id = session.get('USER_ID')
-        if user_id is None:
-            raise InvalidData("User ID not found")
         image_controller = DataResourceManager.get_image_data_controller(current_app)
         saved_image = image_controller.save_image(image_file, UserContainer(user_id))
         if not saved_image.unique:
             return jsonify({"status": "error", "message": "Image already exists"}), 400
 
+
     @login_required
     @images_blueprint.route('/get', methods=['GET'])
-    def get_image():
-        user_id = session.get('user_id')
+    def get_image(user_id):
         image_controller = DataResourceManager.get_image_data_controller(current_app)
         path, mime = image_controller.get_image_path(UserContainer(user_id))
         if path and mime is not None:
