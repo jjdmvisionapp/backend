@@ -9,3 +9,6 @@ class DataController(ABC):
     @abstractmethod
     def init_controller(self):
         pass
+    @abstractmethod
+    def shutdown_controller(self, testing=False):
+        pass

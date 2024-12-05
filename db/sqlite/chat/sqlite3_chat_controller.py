@@ -93,3 +93,14 @@ class SQLite3ChatController(ChatDataController):
             delete_query = f'DELETE FROM {self.chat_table_name} WHERE chat_id = ?'
             cursor.execute(delete_query, (message_id,))
             conn.commit()
+
+    def shutdown_controller(self, testing=False):
+        if testing:
+            with self.db_adaptor.get_connection() as conn:
+                cursor = conn.cursor()
+                try:
+                    # Drop the user table
+                    cursor.execute(f'DROP TABLE IF EXISTS {self.chat_table_name}')
+                    conn.commit()
+                except sqlite3.Error as e:
+                    raise DBError(f"Failed to drop table {self.chat_table_name}: {e}")

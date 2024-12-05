@@ -3,7 +3,7 @@ from abc import abstractmethod
 from typing import List, Optional
 
 from email_validator import validate_email, EmailNotValidError
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.exceptions.invalid_data import InvalidData
 from db.data_controller import DataController
@@ -22,11 +22,11 @@ class UserDataController(DataController):
     def create_new_user(self, username: str, email: str, password: str, user_type: str) -> CompleteUser:
         try:
             valid = validate_email(email)
-            email = valid.normalized_email
+            email = valid.normalized
             hashed_password = generate_password_hash(password)
             return self._create_user_impl(username, email, hashed_password, user_type)
         except EmailNotValidError:
-            raise InvalidData
+            raise InvalidData("Email not valid")
 
     @abstractmethod
     def _create_user_impl(self, username: str, email: str, password: str, user_type: str) -> CompleteUser:
@@ -39,8 +39,7 @@ class UserDataController(DataController):
     def validate_user(self, username: str, given_password: str, given_email: str) -> Optional[CompleteUser]:
         user = self.get_user_by_username(username)
         if user is not None:
-            hashed_given_password = generate_password_hash(given_password)
-            if user.password == hashed_given_password and given_email == user.email:
+            if check_password_hash(user.password, given_password) and given_email == user.email:
                 return user
         return None
 
@@ -65,7 +64,7 @@ class UserDataController(DataController):
         pass
 
     @abstractmethod
-    def shutdown_controller(self):
+    def shutdown_controller(self, testing=False):
         pass
 
     def json_to_user(self, json_str: str) -> Optional[UserContainer]:

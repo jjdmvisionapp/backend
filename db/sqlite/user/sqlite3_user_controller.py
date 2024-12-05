@@ -2,6 +2,7 @@
 import sqlite3
 from typing import List, Optional
 
+from app.exceptions.invalid_data import InvalidData
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
 from db.types.exceptions.db_error import DBError
 from db.types.user.complete_user import CompleteUser
@@ -45,6 +46,7 @@ class SQLite3UserController(UserDataController):
                 )
             ''')
             conn.commit()
+            print("called init")
 
     def _create_user_impl(self, username: str, email: str, password: str, user_type: str) -> UserContainer:
         try:
@@ -59,14 +61,14 @@ class SQLite3UserController(UserDataController):
                 conn.commit()
                 last_inserted_id = cursor.lastrowid
                 return CompleteUser(last_inserted_id, username.lower(), email.lower(), password, user_type.lower())
-        except sqlite3.IntegrityError as e:
-            raise DBError("User with this username or email already exists.") from e
+        except sqlite3.IntegrityError:
+            raise InvalidData("User already exists")
 
     def get_user_by_username(self, username: str) -> Optional[CompleteUser]:
         return self._get_user_by_attrib("user_username", username.lower())
 
     def get_user_by_id(self, user_id: int) -> Optional[UserContainer]:
-        return self._get_user_by_attrib("id", id)
+        return self._get_user_by_attrib("user_id", user_id)
 
     def get_user_by_email(self, email: str) -> Optional[UserContainer]:
         return self._get_user_by_attrib("user_email", email.lower())
@@ -113,7 +115,16 @@ class SQLite3UserController(UserDataController):
         except sqlite3.IntegrityError as e:
             raise DBError("Error updating user. This might be due to a unique constraint violation.") from e
 
-    def shutdown_controller(self):
-        pass
+    def shutdown_controller(self, testing=False):
+        if testing:
+            with self.db_adaptor.get_connection() as conn:
+                cursor = conn.cursor()
+                try:
+                    # Drop the user table
+                    cursor.execute(f'DROP TABLE IF EXISTS {self.user_table_name}')
+                    conn.commit()
+                except sqlite3.Error as e:
+                    raise DBError(f"Failed to drop table {self.user_table_name}: {e}")
+
 
 

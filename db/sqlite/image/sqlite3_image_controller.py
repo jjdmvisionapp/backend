@@ -4,6 +4,7 @@ from typing import Optional
 
 from db.image_data_controller import ImageDataController
 from db.sqlite.sqlite_db_adaptor import SQLiteDBAdaptor
+from db.types.exceptions.db_error import DBError
 from db.types.image import Image
 from db.types.user.user_container import UserContainer
 
@@ -76,3 +77,14 @@ class SQLite3ImageController(ImageDataController):
             user_query = f'DELETE FROM {self.image_table_name} WHERE image_id = ?'
             cursor.execute(user_query, (image_id,))
             conn.commit()
+
+    def shutdown_controller(self, testing=False):
+        if testing:
+            with self.db_adaptor.get_connection() as conn:
+                cursor = conn.cursor()
+                try:
+                    # Drop the user table
+                    cursor.execute(f'DROP TABLE IF EXISTS {self.image_table_name}')
+                    conn.commit()
+                except sqlite3.Error as e:
+                    raise DBError(f"Failed to drop table {self.image_table_name}: {e}")
