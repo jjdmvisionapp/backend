@@ -12,7 +12,13 @@ from db.types.chat_message import ChatMessage
 from db.types.user.user_container import UserContainer
 
 
-# TODO: Maybe move socket io functions to a separate class
+
+def _run_chatbot(socket: SocketIO):
+    with current_app.app_context():
+        port = current_app.config["MODULES"]["CHATBOT"]["PORT"]
+        socket.run(port=port, app=current_app)
+
+
 class ChatDataController(DataController, ABC):
 
     CHATBOT_ID = -1
@@ -68,6 +74,8 @@ class ChatDataController(DataController, ABC):
 
             except Exception as e:
                 emit('error', {'error': str(e)}, namespace='/chat')
+
+            _run_chatbot(socket)
 
 
     # def send_message(self, from_user: User, to_user: User, message: str):

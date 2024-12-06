@@ -15,6 +15,9 @@
       "RESNET": {
         "IMAGE_RESIZE": 256
       }
+    },
+    "CHATBOT": {
+      "PORT": 500
     }
   },
   "DATABASE": {

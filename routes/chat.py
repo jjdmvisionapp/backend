@@ -9,8 +9,8 @@ def create_chat_blueprint(blueprint):
 
     chat_blueprint = Blueprint('chat', __name__, url_prefix=blueprint + '/chat')
 
-    @login_required
     @chat_blueprint.route("/messages", methods=["GET"])
+    @login_required
     def messages():
         user_id = g.get("USER_ID")
         if request.method == "GET":

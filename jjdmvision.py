@@ -1,8 +1,9 @@
 import json
 import secrets
 
+import socketio
 from cachelib import FileSystemCache
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 from flask_session import Session
 
@@ -50,9 +51,17 @@ def create_app(testing=False):
         }
         return jsonify(message), 500
 
+    @flask_app.before_request
+    def handle_preflight():
+        if request.method == "OPTIONS":
+            res = Response()
+            res.headers['X-Content-Type-Options'] = '*'
+            return res
+
     @flask_app.teardown_appcontext
     def shutdown_session(exc=None):
         DataResourceManager.shutdown(testing)
+
 
     return flask_app
 
