@@ -36,8 +36,8 @@ class UserDataController(DataController):
     def get_user_by_username(self, username: str) -> Optional[CompleteUser]:
         pass
 
-    def validate_user(self, username: str, given_password: str, given_email: str) -> Optional[CompleteUser]:
-        user = self.get_user_by_username(username)
+    def validate_user(self, given_password: str, given_email: str) -> Optional[CompleteUser]:
+        user = self.get_user_by_email(given_email)
         if user is not None:
             if check_password_hash(user.password, given_password) and given_email == user.email:
                 return user

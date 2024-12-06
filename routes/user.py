@@ -31,7 +31,7 @@ def create_user_blueprint(base_endpoint):
 
             # Retrieve the user data controller to handle authentication
             user_controller = DataResourceManager.get_user_data_controller(current_app)
-            valid_user = user_controller.validate_user(username, password, email)
+            valid_user = user_controller.validate_user(password, email)
             if valid_user:
                 session["USER_ID"] = valid_user.id
                 session["USERNAME"] = valid_user.username
