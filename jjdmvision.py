@@ -26,7 +26,7 @@ def create_app(testing=False):
     flask_app.config['SESSION_PERMANENT'] = True
     endpoint = flask_app.config["ENDPOINT"]
     Session(flask_app)
-    CORS(flask_app)
+    CORS(flask_app, supports_credentials=True)
 
     flask_app.register_blueprint(create_user_blueprint(endpoint))
     flask_app.register_blueprint(create_images_blueprint(endpoint))

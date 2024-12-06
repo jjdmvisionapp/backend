@@ -94,6 +94,7 @@ def test_invalid_login(client, app, endpoint, port):
 def test_session(client, app, endpoint, port):
     login_url = f"http://localhost:{port}{endpoint}user/login"
 
+
     with app.test_client() as test_client:
         with app.app_context():
             # Perform login request
