@@ -1,7 +1,7 @@
 {
   "ENDPOINT": "/api/v1/",
   "PORT": 8080,
-  "DEBUG": true,
+  "DEBUG": false,
   "SECRETS": {
     "HUGGINGFACE": "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",
     "SESSION_TOKEN": ""

@@ -13,69 +13,70 @@ def create_user_blueprint(base_endpoint):
 
     @user_blueprint.route("/login", methods=["POST"])
     def login():
-        if request.method == "POST":
-            # Safely get email and password from form
-            username = request.form.get("username")
-            email = request.form.get("email")
-            password = request.form.get("password")
+        data = request.json
 
-            # Ensure both fields are provided
-            if not email or not password:
-                raise InvalidData("No email or password")
+        # Safely get email and password from the JSON payload
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
 
-            try:
+        # Ensure both fields are provided
+        if not email or not password:
+            raise InvalidData("No email or password")
 
-                # Validate email using the email_validator library
-                valid = validate_email(email)
-                email = valid.normalized
+        try:
+            # Validate email using the email_validator library
+            valid = validate_email(email)
+            email = valid.normalized
 
-                # Retrieve the user data controller to handle authentication (or other logic)
-                user_controller = DataResourceManager.get_user_data_controller(current_app)
-                valid_user = user_controller.validate_user(username, password, email)
-                if valid_user:
-                    session["USER_ID"] = valid_user.id
-                    session["USERNAME"] = valid_user.username
-                    session["EMAIL"] = valid_user.email
-                    # Return a successful response (this can be a token or user info, depending on your app logic)
-                    return jsonify(
-                        {"status": "success", "message": "Login successful", "session": valid_user.to_dict()}), 200
-                else:
-                    raise InvalidData("Incorrect login")
+            # Retrieve the user data controller to handle authentication
+            user_controller = DataResourceManager.get_user_data_controller(current_app)
+            valid_user = user_controller.validate_user(username, password, email)
+            if valid_user:
+                session["USER_ID"] = valid_user.id
+                session["USERNAME"] = valid_user.username
+                session["EMAIL"] = valid_user.email
+                return jsonify(
+                    {"status": "success", "message": "Login successful", "session": valid_user.to_dict()}), 200
+            else:
+                raise InvalidData("Incorrect login")
 
-            except EmailNotValidError:
-                # If email is invalid, raise a generic exception
-                raise InvalidData  # No specific message here for security
+        except EmailNotValidError:
+            raise InvalidData("Invalid email")
 
     @user_blueprint.route("/register", methods=["POST"])
     def register():
-        if request.method == "POST":
-            username = request.form.get("username")
-            email = request.form.get("email")
-            password = request.form.get("password")
+        data = request.json
 
-            # Ensure both fields are provided
-            if not email or not password:
-                raise InvalidData("No email or password")  # Don't provide specifics for security reasons
+        # Safely get user details from the JSON payload
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
 
-            user_controller = DataResourceManager.get_user_data_controller(current_app)
-            user = user_controller.create_new_user(username, email, password, 'user')
-            if user is not None:
-                session["user_id"] = user.id
-                session["username"] = user.username
-                session["email"] = user.email
-                return jsonify({"status": "success", "message": "Registration successful"}), 200
-            else:
-                raise DBError("Fatal error")
+        # Ensure all fields are provided
+        if not email or not password:
+            raise InvalidData("No email or password")
+
+        user_controller = DataResourceManager.get_user_data_controller(current_app)
+        user = user_controller.create_new_user(username, email, password, 'user')
+        if user is not None:
+            session["USER_ID"] = user.id
+            session["USERNAME"] = user.username
+            session["EMAIL"] = user.email
+            return jsonify({"status": "success", "message": "Registration successful", "user": user.to_dict()}), 200
+        else:
+            raise DBError("Fatal error")
 
     @user_blueprint.route("/update", methods=["POST"])
     @login_required
     def update():
         user_id = g.get("USER_ID")
-        if request.method == "POST":
-            attributes = request.form
-            user_controller = DataResourceManager.get_user_data_controller(current_app)
-            user_controller.update_user(UserContainer(user_id), attributes)
-            return jsonify({"status": "success", "message": "Info update successful"}), 200
+        data = request.json
+
+        # Update user with new attributes provided in JSON payload
+        user_controller = DataResourceManager.get_user_data_controller(current_app)
+        user_controller.update_user(UserContainer(user_id), data)
+        return jsonify({"status": "success", "message": "Info update successful"}), 200
 
     @user_blueprint.route("/@me")
     @login_required
@@ -96,6 +97,6 @@ def create_user_blueprint(base_endpoint):
         user_id = g.get("USER_ID")
         user_controller = DataResourceManager.get_user_data_controller(current_app)
         user_controller.delete_user(user_id)
-        return jsonify({"status": "success", "message": "Delete successfully"}), 200
+        return jsonify({"status": "success", "message": "Delete successful"}), 200
 
     return user_blueprint
