@@ -20,6 +20,11 @@ You should be able to use the Pipfile to get these all installed easily:
 2. Then, in this directory, run `pipenv install`
 3. And finally, do `pipenv run python jjdmvision.py`
 
+## Testing
+*optional*
+
+`pipenv run pytest` should do the trick, hopefully they all pass! Only testing user routes at the minute.
+
 ## Routes
 
 *Here is what a route could return generically upon an error*:
@@ -63,7 +68,12 @@ HTTP 200 OK
 ```json
 {
   "status": "success", 
-  "message": "Login successful"
+  "message": "Login successful",
+  "session": {
+    "id": "32813",
+    "username": "johndoe",
+    "email": "example@email.com"
+  }
 }
 ```
 
