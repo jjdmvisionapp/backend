@@ -8,6 +8,7 @@ Run `jjdmvision.py` to start the server.
 - pytest
 - flask-socketio 
 - eventlet
+- cachelib
 - torch
 - torchvision
 - pillow
