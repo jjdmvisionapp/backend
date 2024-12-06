@@ -90,4 +90,11 @@ def create_user_blueprint(base_endpoint):
         session.clear()
         return jsonify({"status": "success", "message": "Logged out successfully"}), 200
 
-    return user_blueprint
+    @user_blueprint.route("/delete", methods=["POST"])
+    @login_required
+    def user_blueprint():
+        user_id = g.get("USER_ID")
+        user_controller = DataResourceManager.get_user_data_controller(current_app)
+        user_controller.delete_user(user_id)
+        return jsonify({"status": "success", "message": "Logged out successfully"}), 200
+

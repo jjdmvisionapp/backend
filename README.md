@@ -24,7 +24,7 @@ You should be able to use the Pipfile to get these all installed easily:
 ## Testing
 *optional*
 
-`pipenv run pytest` should do the trick, hopefully they all pass! Only testing user routes at the minute.
+`pipenv run pytest` should do the trick, hopefully they all pass! Only testing user routes at the minute
 
 ## Routes
 
