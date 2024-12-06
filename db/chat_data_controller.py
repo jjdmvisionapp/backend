@@ -23,6 +23,7 @@ class ChatDataController(DataController, ABC):
         Processes incoming chat data and returns a tuple containing the message dictionary,
         the sender's user ID, and the recipient's user ID.
         """
+        print("yo")
         try:
             # Extract data from the incoming WebSocket message
             message = data.get('message')

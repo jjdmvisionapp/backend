@@ -4,7 +4,7 @@ import threading
 
 import socketio
 from cachelib import FileSystemCache
-from flask import Flask, jsonify, request, Response, session
+from flask import Flask, jsonify, request, Response, session, g
 from flask_cors import CORS
 from flask_session import Session
 from flask_socketio import disconnect, emit, SocketIO
@@ -66,17 +66,20 @@ def create_app(testing=False):
 
     socket = SocketIO(flask_app, cors_allowed_origins="*", manage_session=False)
 
-    # Event handler for connection
-    @socket.on('connect', namespace='/chat')
-    def handle_connect():
-        if "username" not in session or "email" not in session:
-            disconnect()  # Disconnect the user if not authenticated
-        else:
-            emit('response', {'status': 'success', 'message': 'User authenticated'})
+    # # Event handler for connection
+    # @socket.on('connect', namespace='/chat')
+    # def handle_connect():
+    #     user_id = g.get("USER_ID")
+    #     if not user_id:
+    #         disconnect()  # Disconnect the user if not authenticated
+    #     else:
+    #         emit('response', {'status': 'success', 'message': 'User authenticated'})
 
     @socket.on('send_message', namespace='/chat')
     def handle_message(data):
+        print(data)
         returned_json, from_user_id, to_user = DataResourceManager.get_chat_callback(data)
+        print(returned_json, from_user_id, to_user)
         emit('receive_message', returned_json, to=str(from_user_id), namespace='/chat')
 
     # Run SocketIO in a separate thread
