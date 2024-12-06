@@ -9,7 +9,6 @@ from db.types.chat_message import ChatMessage
 from db.types.exceptions.db_error import DBError
 from db.types.user.user_container import UserContainer
 
-# ChatGPT helped add timestamp
 class SQLite3ChatController(ChatDataController):
 
     def __init__(self, sqlite_adaptor: SQLiteDBAdaptor, chatbot: ChatBotController):
@@ -17,18 +16,33 @@ class SQLite3ChatController(ChatDataController):
         self.user_table_name = sqlite_adaptor.user_table_name
         self.chat_table_name = sqlite_adaptor.chat_table_name
 
-    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str,
-                                message_type: str) -> ChatMessage:
+    def _save_chat_message_impl(self, from_user: UserContainer, to_user: UserContainer, message: str, message_type: str) -> ChatMessage:
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
-                # Insert the message into the database
+
+                # First, ensure the sender exists in the user table
+                cursor.execute(f"SELECT user_id FROM {self.user_table_name} WHERE user_id = ?", (from_user.id,))
+                sender_exists = cursor.fetchone()
+                if not sender_exists:
+                    raise DBError(f"Sender user with id {from_user.id} does not exist.")
+
+                # If to_user exists, ensure they also exist in the user table
+                if to_user:
+                    cursor.execute(f"SELECT user_id FROM {self.user_table_name} WHERE user_id = ?", (to_user.id,))
+                    receiver_exists = cursor.fetchone()
+                    if not receiver_exists:
+                        raise DBError(f"Receiver user with id {to_user.id} does not exist.")
+                else:
+                    receiver_exists = True  # If there's no receiver, assume valid for chatbot
+
+                # Insert the message into the chat table
                 query = f'''
                     INSERT INTO {self.chat_table_name} 
                     (chat_content, sender_id, to_id, message_type) 
                     VALUES (?, ?, ?, ?)
                 '''
-                cursor.execute(query, (message, from_user.id, to_user.id if to_user else None, message_type))
+                cursor.execute(query, (message, from_user.id, to_user.id if to_user else -1, message_type))
 
                 # Fetch the timestamp for the inserted row
                 last_row_id = cursor.lastrowid
@@ -36,12 +50,12 @@ class SQLite3ChatController(ChatDataController):
                     SELECT chat_timestamp FROM {self.chat_table_name} WHERE chat_id = ?
                 '''
                 cursor.execute(timestamp_query, (last_row_id,))
-                created_at_string = cursor.fetchone()["created_at"]
-                created_at = datetime.strptime(created_at_string, "%Y-%m-%d %H:%M:%S")
+                created_at = cursor.fetchone()["chat_timestamp"]
                 conn.commit()
 
                 # Return the ChatMessage with the timestamp
-                return ChatMessage(last_row_id, from_user.id, to_user.id, message, message_type, created_at)
+                return ChatMessage(last_row_id, from_user.id, to_user.id if to_user else -1, message, message_type, created_at)
+
         except sqlite3.IntegrityError as e:
             raise DBError("Failed to save chat message due to database integrity error.") from e
 
@@ -50,7 +64,8 @@ class SQLite3ChatController(ChatDataController):
             cursor = conn.cursor()
             query = f'''
                 SELECT * FROM {self.chat_table_name} 
-                WHERE sender_id = ? OR to_id = ?
+                WHERE (sender_id = ? AND to_id = -1) 
+                OR (sender_id = -1 AND to_id = ?)
                 ORDER BY chat_timestamp
             '''
             rows = cursor.execute(query, (user.id, user.id)).fetchall()
@@ -61,13 +76,14 @@ class SQLite3ChatController(ChatDataController):
                     receiver_id=row['to_id'],
                     type=row['message_type'],
                     message=row['chat_content'],
-                    timestamp=datetime.strptime(row['chat_timestamp'], "%Y-%m-%d %H:%M:%S"),
+                    timestamp=row['chat_timestamp'],
                 )
                 for row in rows
             ]
 
     def init_controller(self):
         super().init_controller()
+        self.create_dummy_user()
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
             # Chat Table (stores messages between the user and the chatbot)
@@ -85,6 +101,15 @@ class SQLite3ChatController(ChatDataController):
                     ON DELETE CASCADE
                 )
             ''')
+            conn.commit()
+
+    def create_dummy_user(self):
+        with self.db_adaptor.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f'''
+                INSERT OR IGNORE INTO {self.user_table_name} (user_id, user_email, user_username, user_password, user_type)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (-1,'joshpassmore@outlook.com', 'ChatBot', 'chatbot', 'bot'))
             conn.commit()
 
     def delete_chat_message(self, message_id: int):

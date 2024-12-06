@@ -7,7 +7,7 @@ from chatbots.chatbot_controller import ChatBotController
 class FlanT5ChatBot(ChatBotController):
 
     def __init__(self, flask_app: Flask):
-        self.huggingface_token = flask_app.config["HUGGINGFACE"]
+        self.huggingface_token = flask_app.config["SECRETS"]["HUGGINGFACE"]
         self.api_url = "https://api-inference.huggingface.co/models/google/flan-t5-large"
         self.request_headers = {"Authorization": "Bearer %s" % self.huggingface_token}
 

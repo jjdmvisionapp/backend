@@ -9,7 +9,7 @@ class ChatMessage:
     receiver_id: int
     message: str
     type: str
-    timestamp: datetime
+    timestamp: str
     def to_dict(self):
         return {
             "message_id": self.message_id,
@@ -17,5 +17,5 @@ class ChatMessage:
             "receiver_id": self.receiver_id,
             "message": self.message,
             "type": self.type,
-            "timestamp": self.timestamp,
+            "timestamp": str(self.timestamp),
         }

@@ -45,6 +45,7 @@ class ChatDataController(DataController, ABC):
                 # Save the user's message and chatbot's response in the database
                 user_message = self._save_chat_message_impl(chatbot, user, message, 'user')
                 bot_message = self._save_chat_message_impl(user, chatbot, chatbot_response, 'bot')
+                print(bot_message.to_dict(), from_user_id, self.CHATBOT_ID)
 
                 # Return the chatbot's response message
                 return bot_message.to_dict(), from_user_id, self.CHATBOT_ID

@@ -26,7 +26,7 @@ def create_chat_blueprint(blueprint):
                     "id": chat.message_id,
                     "sender_id": chat.sender_id,
                     "receiver_id": chat.receiver_id,
-                    "content": chat.message,
+                    "message": chat.message,
                     "type": chat.type,
                     "timestamp": chat.timestamp.isoformat()  # Ensure timestamp is serialized
                 }

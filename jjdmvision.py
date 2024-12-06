@@ -1,13 +1,11 @@
 import json
 import secrets
 import threading
-
-import socketio
-from cachelib import FileSystemCache
-from flask import Flask, jsonify, request, Response, session, g
-from flask_cors import CORS
+from flask import Flask, jsonify, request, Response, session
+from flask_socketio import SocketIO, emit, join_room
 from flask_session import Session
-from flask_socketio import disconnect, emit, SocketIO
+from flask_cors import CORS
+from cachelib import FileSystemCache
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -18,8 +16,6 @@ from routes.user import create_user_blueprint
 
 
 def create_app(testing=False):
-    from app.data_resource_manager import DataResourceManager
-    # Create the app instance
     flask_app = Flask(__name__)
     flask_app.config.from_file("config.json", load=json.load)
 
@@ -27,64 +23,40 @@ def create_app(testing=False):
     flask_app.config["SESSION_CACHELIB"] = FileSystemCache(cache_dir='sessions', threshold=500)
     flask_app.config["SESSION_TYPE"] = "cachelib"
     flask_app.config['SESSION_PERMANENT'] = True
-    endpoint = flask_app.config["ENDPOINT"]
     Session(flask_app)
-    CORS(flask_app, supports_credentials=True)
+    CORS(flask_app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
-    flask_app.register_blueprint(create_user_blueprint(endpoint))
-    flask_app.register_blueprint(create_images_blueprint(endpoint))
-    flask_app.register_blueprint(create_chat_blueprint(endpoint))
+    flask_app.register_blueprint(create_user_blueprint(flask_app.config["ENDPOINT"]))
+    flask_app.register_blueprint(create_images_blueprint(flask_app.config["ENDPOINT"]))
+    flask_app.register_blueprint(create_chat_blueprint(flask_app.config["ENDPOINT"]))
 
     @flask_app.errorhandler(InvalidData)
     def handle_invalid_data(exception):
         if testing: flask_app.logger.exception(exception)
-        message = {
-            "status": "error",
-            "message": "Invalid data provided",
-        }
-        return jsonify(message), 400
+        return jsonify({"status": "error", "message": "Invalid data provided"}), 400
 
     @flask_app.errorhandler(DBError)
     def handle_db_error(exception):
         if testing: flask_app.logger.exception(exception)
-        message = {
-            "status": "error",
-            "message": "Internal server error",
-        }
-        return jsonify(message), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
-    @flask_app.before_request
-    def handle_preflight():
-        if request.method == "OPTIONS":
-            res = Response()
-            res.headers['X-Content-Type-Options'] = '*'
-            return res
+    socket = SocketIO(flask_app, cors_allowed_origins="*", manage_session=False, debug=True)
 
-    @flask_app.teardown_appcontext
-    def shutdown_session(exc=None):
-        DataResourceManager.shutdown(testing)
-
-    socket = SocketIO(flask_app, cors_allowed_origins="*", manage_session=False)
-
-    # # Event handler for connection
-    # @socket.on('connect', namespace='/chat')
-    # def handle_connect():
-    #     user_id = g.get("USER_ID")
-    #     if not user_id:
-    #         disconnect()  # Disconnect the user if not authenticated
-    #     else:
-    #         emit('response', {'status': 'success', 'message': 'User authenticated'})
+    @socket.on('connect', namespace='/chat')
+    def handle_connect():
+        user_id = request.args.get("user_id", "default_user")  # Get user_id from query
+        join_room(user_id)
+        emit('status', {'message': f'User {user_id} connected'}, room=user_id)
 
     @socket.on('send_message', namespace='/chat')
     def handle_message(data):
-        print(data)
+        print(f"Message received: {data}")
         returned_json, from_user_id, to_user = DataResourceManager.get_chat_callback(data)
         print(returned_json, from_user_id, to_user)
-        emit('receive_message', returned_json, to=str(from_user_id), namespace='/chat')
+        emit('receive_message', returned_json, room=str(from_user_id), namespace='/chat')
 
-    # Run SocketIO in a separate thread
     def run_socket():
-        socket.run(flask_app, port=flask_app.config["MODULES"]["CHATBOT"]["PORT"])
+        socket.run(flask_app, port=23432)
 
     threading.Thread(target=run_socket, daemon=True).start()
 
@@ -92,5 +64,5 @@ def create_app(testing=False):
 
 
 if __name__ == '__main__':
-    jjdm = create_app()
-    jjdm.run(port=jjdm.config["PORT"])
+    app = create_app()
+    app.run(port=app.config["PORT"])
