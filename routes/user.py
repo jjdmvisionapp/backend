@@ -98,3 +98,4 @@ def create_user_blueprint(base_endpoint):
         user_controller.delete_user(user_id)
         return jsonify({"status": "success", "message": "Logged out successfully"}), 200
 
+    return user_blueprint
