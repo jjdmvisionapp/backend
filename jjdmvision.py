@@ -57,7 +57,10 @@ def create_app(testing=False):
     def handle_preflight():
         if request.method == "OPTIONS":
             res = Response()
-            res.headers['X-Content-Type-Options'] = '*'
+            res.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
+            res.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+            res.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+            res.headers["Access-Control-Allow-Credentials"] = "true"
             return res
 
     @flask_app.teardown_appcontext
