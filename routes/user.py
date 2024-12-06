@@ -1,5 +1,6 @@
 from email_validator import validate_email, EmailNotValidError
 from flask import Blueprint, request, current_app, jsonify, session, g
+from flask_cors import cross_origin
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -12,6 +13,7 @@ def create_user_blueprint(base_endpoint):
     user_blueprint = Blueprint('user', __name__, url_prefix=base_endpoint + '/user')
 
     @user_blueprint.route("/login", methods=["POST"])
+    @cross_origin(supports_credentials=True)
     def login():
         data = request.json
 
@@ -68,6 +70,7 @@ def create_user_blueprint(base_endpoint):
             raise DBError("Fatal error")
 
     @user_blueprint.route("/update", methods=["POST"])
+    @cross_origin(supports_credentials=True)
     @login_required
     def update():
         user_id = g.get("USER_ID")
@@ -79,6 +82,7 @@ def create_user_blueprint(base_endpoint):
         return jsonify({"status": "success", "message": "Info update successful"}), 200
 
     @user_blueprint.route("/@me")
+    @cross_origin(supports_credentials=True)
     @login_required
     def get_current_user():
         user_id = g.get("USER_ID")
@@ -86,12 +90,14 @@ def create_user_blueprint(base_endpoint):
         return jsonify({"status": "success", "user": user.to_dict()}), 200
 
     @user_blueprint.route("/logout", methods=["POST", "GET"])
+    @cross_origin(supports_credentials=True)
     @login_required
     def logout():
         session.clear()
         return jsonify({"status": "success", "message": "Logged out successfully"}), 200
 
     @user_blueprint.route("/delete", methods=["POST"])
+    @cross_origin(supports_credentials=True)
     @login_required
     def delete():
         user_id = g.get("USER_ID")

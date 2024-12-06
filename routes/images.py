@@ -1,4 +1,5 @@
 from flask import Blueprint, current_app, request, jsonify, session, send_file, g
+from flask_cors import cross_origin
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -12,8 +13,9 @@ def create_images_blueprint(endpoint):
 
     images_blueprint = Blueprint('images', __name__, url_prefix=endpoint + '/images')
 
-    @login_required
     @images_blueprint.route('/upload', methods=['POST'])
+    @cross_origin(supports_credentials=True)
+    @login_required
     def images():
         user_id = g.get("USER_ID")
         if 'file' not in request.files:
@@ -28,8 +30,9 @@ def create_images_blueprint(endpoint):
             return jsonify({"status": "error", "message": "Image already exists"}), 400
 
 
-    @login_required
     @images_blueprint.route('/get', methods=['GET'])
+    @cross_origin(supports_credentials=True)
+    @login_required
     def get_image():
         user_id = g.get("USER_ID")
         image_controller = DataResourceManager.get_image_data_controller(current_app)

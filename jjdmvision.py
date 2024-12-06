@@ -1,11 +1,12 @@
 import json
 import secrets
 import threading
-from flask import Flask, jsonify, request, Response, session
-from flask_socketio import SocketIO, emit, join_room
-from flask_session import Session
-from flask_cors import CORS
+
 from cachelib import FileSystemCache
+from flask import Flask, jsonify, request, Response
+from flask_cors import CORS
+from flask_session import Session
+from flask_socketio import SocketIO, emit, join_room
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -23,8 +24,9 @@ def create_app(testing=False):
     flask_app.config["SESSION_CACHELIB"] = FileSystemCache(cache_dir='sessions', threshold=500)
     flask_app.config["SESSION_TYPE"] = "cachelib"
     flask_app.config['SESSION_PERMANENT'] = True
-    Session(flask_app)
     CORS(flask_app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+    Session(flask_app)
+
 
     flask_app.register_blueprint(create_user_blueprint(flask_app.config["ENDPOINT"]))
     flask_app.register_blueprint(create_images_blueprint(flask_app.config["ENDPOINT"]))
@@ -49,23 +51,33 @@ def create_app(testing=False):
         DataResourceManager.shutdown(testing)
         return jsonify({"status": "error", "message": "Internal server error"}), 500
 
+    @flask_app.before_request
+    def handle_preflight():
+        if request.method == "OPTIONS":
+            res = Response()
+            res.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
+            res.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+            res.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+            res.headers["Access-Control-Allow-Credentials"] = "true"
+            return res
+
     socket = SocketIO(flask_app, cors_allowed_origins="*", manage_session=False, debug=True)
 
     @socket.on('connect', namespace='/chat')
     def handle_connect():
         user_id = request.args.get("user_id", "default_user")  # Get user_id from query
         join_room(user_id)
-        emit('status', {'message': f'User {user_id} connected'}, room=user_id)
+        emit('status', {'message': f'User {user_id} connected'}, to=user_id)
 
     @socket.on('send_message', namespace='/chat')
     def handle_message(data):
         print(f"Message received: {data}")
         returned_json, from_user_id, to_user = DataResourceManager.get_chat_callback(data)
         print(returned_json, from_user_id, to_user)
-        emit('receive_message', returned_json, room=str(from_user_id), namespace='/chat')
+        emit('receive_message', returned_json, to=str(from_user_id), namespace='/chat')
 
     def run_socket():
-        socket.run(flask_app, port=flask.config["MODULES"]["CHATBOT"]["PORT"])
+        socket.run(flask_app, port=flask_app.config["MODULES"]["CHATBOT"]["PORT"], allow_unsafe_werkzeug=True)
 
     threading.Thread(target=run_socket, daemon=True).start()
 

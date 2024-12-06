@@ -1,4 +1,5 @@
 from flask import Blueprint, request, current_app, jsonify, g
+from flask_cors import cross_origin
 
 from app.data_resource_manager import DataResourceManager
 from db.types.user.user_container import UserContainer
@@ -10,6 +11,7 @@ def create_chat_blueprint(blueprint):
     chat_blueprint = Blueprint('chat', __name__, url_prefix=blueprint + '/chat')
 
     @chat_blueprint.route("/messages", methods=["GET"])
+    @cross_origin(supports_credentials=True)
     @login_required
     def messages():
         user_id = g.get("USER_ID")
@@ -28,7 +30,7 @@ def create_chat_blueprint(blueprint):
                     "receiver_id": chat.receiver_id,
                     "message": chat.message,
                     "type": chat.type,
-                    "timestamp": chat.timestamp.isoformat()  # Ensure timestamp is serialized
+                    "timestamp": chat.timestamp  # Ensure timestamp is serialized
                 }
                 for chat in chat_messages
             ]
