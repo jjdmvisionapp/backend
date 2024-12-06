@@ -20,6 +20,7 @@ class DataResourceManager:
     _user_data_controller = None
     _chat_data_controller = None
     _image_data_controller = None
+    _socket = None
     _lock = threading.Lock()
 
     @staticmethod

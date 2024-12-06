@@ -33,6 +33,9 @@ def create_app(testing=False):
     flask_app.register_blueprint(create_images_blueprint(endpoint))
     flask_app.register_blueprint(create_chat_blueprint(endpoint))
 
+    # lazy way to init
+    DataResourceManager.get_image_data_controller(flask_app)
+
     @flask_app.errorhandler(InvalidData)
     def handle_invalid_data(exception):
         if testing: flask_app.logger.exception(exception)
