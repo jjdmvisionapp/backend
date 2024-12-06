@@ -38,6 +38,15 @@ def create_app(testing=False):
     @flask_app.errorhandler(DBError)
     def handle_db_error(exception):
         if testing: flask_app.logger.exception(exception)
+        message = {
+            "status": "error",
+            "message": "Internal server error",
+        }
+        return jsonify(message), 500
+
+    @flask_app.teardown_appcontext
+    def shutdown_session(exc=None):
+        DataResourceManager.shutdown(testing)
         return jsonify({"status": "error", "message": "Internal server error"}), 500
 
     socket = SocketIO(flask_app, cors_allowed_origins="*", manage_session=False, debug=True)
@@ -56,7 +65,7 @@ def create_app(testing=False):
         emit('receive_message', returned_json, room=str(from_user_id), namespace='/chat')
 
     def run_socket():
-        socket.run(flask_app, port=23432)
+        socket.run(flask_app, port=flask.config["MODULES"]["CHATBOT"]["PORT"])
 
     threading.Thread(target=run_socket, daemon=True).start()
 
