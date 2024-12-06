@@ -82,8 +82,6 @@ def create_user_blueprint(base_endpoint):
     def get_current_user():
         user_id = g.get("USER_ID")
         user = DataResourceManager.get_user_data_controller(current_app).get_user_by_id(user_id)
-        if not user:
-            return jsonify({"status": "error", "message": "Unauthorized"}), 401
         return jsonify({"status": "success", "user": user.to_dict()}), 200
 
     @user_blueprint.route("/logout", methods=["POST", "GET"])
