@@ -18,6 +18,7 @@ from routes.user import create_user_blueprint
 
 
 def create_app(testing=False):
+    from app.data_resource_manager import DataResourceManager
     # Create the app instance
     flask_app = Flask(__name__)
     flask_app.config.from_file("config.json", load=json.load)

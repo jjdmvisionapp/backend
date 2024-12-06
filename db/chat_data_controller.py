@@ -3,8 +3,6 @@ from typing import List, Tuple, Dict, Any
 
 from flask import current_app
 from flask_socketio import emit
-
-from app.data_resource_manager import DataResourceManager
 from chatbots.chatbot_controller import ChatBotController
 from db.data_controller import DataController
 from db.db_adaptor import DBAdaptor
@@ -63,6 +61,7 @@ class ChatDataController(DataController, ABC):
             return error_message, -1, -1  # Use -1 as a placeholder for user IDs in case of error
 
     def init_controller(self):
+        from app.data_resource_manager import DataResourceManager
         """
         Initialize the chat data controller and register its callback.
         """
