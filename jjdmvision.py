@@ -1,11 +1,13 @@
 import json
 import secrets
+import threading
 
 import socketio
 from cachelib import FileSystemCache
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, request, Response, session
 from flask_cors import CORS
 from flask_session import Session
+from flask_socketio import disconnect, emit, SocketIO
 
 from app.data_resource_manager import DataResourceManager
 from app.exceptions.invalid_data import InvalidData
@@ -16,7 +18,6 @@ from routes.user import create_user_blueprint
 
 
 def create_app(testing=False):
-
     # Create the app instance
     flask_app = Flask(__name__)
     flask_app.config.from_file("config.json", load=json.load)
@@ -32,9 +33,6 @@ def create_app(testing=False):
     flask_app.register_blueprint(create_user_blueprint(endpoint))
     flask_app.register_blueprint(create_images_blueprint(endpoint))
     flask_app.register_blueprint(create_chat_blueprint(endpoint))
-
-    # lazy way to init
-    DataResourceManager.get_image_data_controller(flask_app)
 
     @flask_app.errorhandler(InvalidData)
     def handle_invalid_data(exception):
@@ -65,6 +63,26 @@ def create_app(testing=False):
     def shutdown_session(exc=None):
         DataResourceManager.shutdown(testing)
 
+    socket = SocketIO(flask_app, cors_allowed_origins="*", manage_session=False)
+
+    # Event handler for connection
+    @socket.on('connect', namespace='/chat')
+    def handle_connect():
+        if "username" not in session or "email" not in session:
+            disconnect()  # Disconnect the user if not authenticated
+        else:
+            emit('response', {'status': 'success', 'message': 'User authenticated'})
+
+    @socket.on('send_message', namespace='/chat')
+    def handle_message(data):
+        returned_json, from_user_id, to_user = DataResourceManager.get_chat_callback(data)
+        emit('receive_message', returned_json, to=str(from_user_id), namespace='/chat')
+
+    # Run SocketIO in a separate thread
+    def run_socket():
+        socket.run(flask_app, port=flask_app.config["MODULES"]["CHATBOT"]["PORT"])
+
+    threading.Thread(target=run_socket, daemon=True).start()
 
     return flask_app
 

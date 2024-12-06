@@ -1,5 +1,6 @@
 import threading
 from pathlib import Path
+from typing import Callable, Tuple, Dict
 
 from flask import Flask
 
@@ -13,15 +14,20 @@ from db.sqlite.user.sqlite3_user_controller import SQLite3UserController
 from db.user_data_controller import UserDataController
 
 
+def _chatbot_not_ready(json: Dict[str, str]) -> Tuple[Dict[str, str], int, int]:
+    return {}, 0, 0
+
+
 # ChatGPT simplified
 class DataResourceManager:
-
     _db_adaptor = None
     _user_data_controller = None
     _chat_data_controller = None
     _image_data_controller = None
     _socket = None
     _lock = threading.Lock()
+
+    _chat_callback = _chatbot_not_ready
 
     @staticmethod
     def get_user_data_controller(flask_app: Flask) -> UserDataController:
@@ -34,6 +40,14 @@ class DataResourceManager:
     @staticmethod
     def get_image_data_controller(flask_app: Flask) -> ImageDataController:
         return DataResourceManager._get_data_controller(flask_app, 'image')
+
+    @staticmethod
+    def change_chat_callback(function: Callable[[Dict[str, str]], Tuple[Dict[str, str], int, int]]):
+        DataResourceManager._chat_callback = function
+
+    @staticmethod
+    def get_chat_callback(json: Dict[str, str]) -> Tuple[Dict[str, str], int, int]:
+        return DataResourceManager._chat_callback(json)
 
     @staticmethod
     def shutdown(testing=False):
