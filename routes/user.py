@@ -47,6 +47,7 @@ def create_user_blueprint(base_endpoint):
             raise InvalidData("Invalid email")
 
     @user_blueprint.route("/register", methods=["POST"])
+    @cross_origin(supports_credentials=True)
     def register():
         data = request.json
 
