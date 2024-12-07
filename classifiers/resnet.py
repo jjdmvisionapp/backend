@@ -1,7 +1,7 @@
-# Define a class for image classification using ResNet
 from pathlib import Path
 
 from PIL import Image
+import torch
 from torchvision import models, transforms
 
 from classifiers.image_classifier import ImageClassifier
@@ -9,9 +9,10 @@ from classifiers.image_classifier import ImageClassifier
 
 class ResNetClassifier(ImageClassifier):
 
-    def __init__(self, class_file='imagenet_classes.txt'):
-        super().__init__()
-        self.class_file = class_file
+    def __init__(self, class_file: Path):
+          # Set the class file explicitly
+          self.class_file = class_file
+          super().__init__()
 
     def load_model(self):
         """Load the pre-trained ResNet model."""
@@ -36,3 +37,11 @@ class ResNetClassifier(ImageClassifier):
         # Open and transform the image
         image = Image.open(image_path).convert('RGB')
         return transform(image).unsqueeze(0)
+    
+    def predict(self, image_path):
+        """Run prediction on the image."""
+        image_tensor = self.transform_image(image_path)  # Transform the image
+        with torch.no_grad():
+            output = self.model(image_tensor)  # Run the model
+            _, predicted = torch.max(output, 1)  # Get predicted class index
+        return self.classes[predicted.item()]  # Return class label
