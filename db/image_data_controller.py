@@ -19,6 +19,7 @@ from db.sqlite.image.util import get_image_hash
 from db.types.image import Image
 from db.types.user.user_container import UserContainer
 
+#TODO: Refactor to use temp files ideally
 
 class ImageDataController(DataController, ABC):
 
@@ -48,7 +49,10 @@ class ImageDataController(DataController, ABC):
 
     def save_image(self, image: FileStorage, user: UserContainer) -> Image:
         image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
-        return self._save_image_to_db(image_name, image_width, image_width, image_hash, image_mime, user)
+        returned_image = self._save_image_to_db(image_name, image_width, image_width, image_hash, image_mime, user)
+        if not returned_image.unique:
+            os.remove(self.image_folder_path / image_name)
+        return returned_image
 
     def update_image(self, image_id: int, image: FileStorage, user: UserContainer):
         image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
