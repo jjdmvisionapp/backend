@@ -37,6 +37,7 @@ class SQLite3ImageController(ImageDataController):
             ''')
             conn.commit()
 
+    # one image per user for now
     def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime,
                           user: UserContainer) -> Image:
         try:
