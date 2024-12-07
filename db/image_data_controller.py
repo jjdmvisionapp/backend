@@ -7,6 +7,7 @@ from typing import Optional
 from PIL import Image as PILImage
 from werkzeug.datastructures import FileStorage
 
+from classifiers.image_classifier import ImageClassifier
 from db.data_controller import DataController
 from db.db_adaptor import DBAdaptor
 from db.sqlite.image.util import get_image_hash
@@ -16,9 +17,10 @@ from db.types.user.user_container import UserContainer
 
 class ImageDataController(DataController, ABC):
 
-    def __init__(self, db_adaptor: DBAdaptor, image_folder_path: Path):
+    def __init__(self, db_adaptor: DBAdaptor, image_folder_path: Path, classifier: ImageClassifier):
         super().__init__(db_adaptor, image_folder_path)
         self.image_folder_path = image_folder_path
+        self.image_classifier = classifier
 
     def init_controller(self):
         os.makedirs(self.image_folder_path, exist_ok=True)
@@ -44,6 +46,10 @@ class ImageDataController(DataController, ABC):
     def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Image:
         pass
 
+    # supports one image per user
+    def classify_image(self, user: UserContainer):
+        image_path, mime = self.get_image_path(user)
+        return self.image_classifier.predict(image_path)
 
     def get_image_path(self, user: UserContainer):
         image = self._get_image_from_db(user)

@@ -1,4 +1,6 @@
 # Define a class for image classification using ResNet
+from pathlib import Path
+
 from PIL import Image
 from torchvision import models, transforms
 
@@ -23,7 +25,7 @@ class ResNetClassifier(ImageClassifier):
             classes = [line.strip() for line in f.readlines()]
         return classes
 
-    def transform_image(self, image_path: str):
+    def transform_image(self, image_path: Path):
         """Transform the input image to match the model's input requirements."""
         transform = transforms.Compose([
             transforms.Resize(256),

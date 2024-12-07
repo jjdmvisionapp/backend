@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from pathlib import Path
 
 import torch
 
@@ -20,11 +21,11 @@ class ImageClassifier(ABC):
         pass
 
     @abstractmethod
-    def transform_image(self, image_path: str):
+    def transform_image(self, image_path: Path):
         """Apply image transformation to the input image."""
         pass
 
-    def predict(self, image_path: str):
+    def predict(self, image_path: Path):
         """Run prediction on the image."""
         image_tensor = self.transform_image(image_path)  # Transform the image
         with torch.no_grad():

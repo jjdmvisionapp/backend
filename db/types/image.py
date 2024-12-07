@@ -9,3 +9,10 @@ class Image:
     height: int
     mime: str
     unique: bool = True
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "width": self.width,
+            "height": self.height,
+            "mime": self.mime,
+        }

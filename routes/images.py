@@ -28,6 +28,8 @@ def create_images_blueprint(endpoint):
         saved_image = image_controller.save_image(image_file, UserContainer(user_id))
         if not saved_image.unique:
             return jsonify({"status": "error", "message": "Image already exists"}), 400
+        else:
+            return jsonify({"status": "success", "image": saved_image.to_dict()}), 200
 
 
     @images_blueprint.route('/get', methods=['GET'])
@@ -39,6 +41,6 @@ def create_images_blueprint(endpoint):
         path, mime = image_controller.get_image_path(UserContainer(user_id))
         if path and mime is not None:
             return send_file(path, mimetype=mime)
-        return jsonify({"status": "success", "message": "No image uploaded"}), 200
+        return jsonify({"status": "error", "message": "No image uploaded"}), 400
 
     return images_blueprint

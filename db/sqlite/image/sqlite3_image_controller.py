@@ -37,21 +37,51 @@ class SQLite3ImageController(ImageDataController):
             ''')
             conn.commit()
 
-    def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Image:
+    def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime,
+                          user: UserContainer) -> Image:
         try:
             with self.db_adaptor.get_connection() as conn:
                 cursor = conn.cursor()
-                query = f'''
-                    INSERT INTO {self.image_table_name} 
-                    (image_name, image_width, image_height, image_hash, image_mime, user_id) 
-                    VALUES (?, ?, ?, ?, ?, ?)
-                '''
-                cursor.execute(query, (image_filename, image_width, image_height, image_hash, image_mime, user.id))
-                conn.commit()
-                return Image(cursor.lastrowid, image_filename, image_width, image_height, image_mime)
-        except sqlite3.IntegrityError:
-            return Image(cursor.lastrowid, image_filename, image_width, image_height, image_mime, False)
 
+                # Check if a row for this user already exists
+                query_check = f'''
+                    SELECT id FROM {self.image_table_name} WHERE user_id = ?
+                '''
+                cursor.execute(query_check, (user.id,))
+                existing_row = cursor.fetchone()
+
+                if existing_row:
+                    # Update the existing row
+                    query_update = f'''
+                        UPDATE {self.image_table_name}
+                        SET 
+                            image_name = ?, 
+                            image_width = ?, 
+                            image_height = ?, 
+                            image_hash = ?, 
+                            image_mime = ?
+                        WHERE user_id = ?
+                    '''
+                    cursor.execute(query_update,
+                                   (image_filename, image_width, image_height, image_hash, image_mime, user.id))
+                    image_id = existing_row[0]  # Retrieve the ID of the existing image
+                else:
+                    # Insert a new row
+                    query_insert = f'''
+                        INSERT INTO {self.image_table_name} 
+                        (image_name, image_width, image_height, image_hash, image_mime, user_id) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    '''
+                    cursor.execute(query_insert,
+                                   (image_filename, image_width, image_height, image_hash, image_mime, user.id))
+                    image_id = cursor.lastrowid
+
+                conn.commit()
+                return Image(image_id, image_filename, image_width, image_height, image_mime)
+
+        except sqlite3.IntegrityError as e:
+            # Handle database integrity errors if needed
+            raise RuntimeError(f"Database error: {e}")
 
     def _update_image_db(self, image_id, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Optional[str]:
         with self.db_adaptor.get_connection() as conn:
