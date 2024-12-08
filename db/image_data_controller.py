@@ -36,10 +36,8 @@ class ImageDataController(DataController, ABC):
         try:
             extension = sent_image.content_type.split('/')[1]
             image_name = str(uuid.uuid4()) + "." + extension
-            print(sent_image.content_type)
             image = PILImage.open(sent_image.stream)
             path = self.image_folder_path / Path(image_name)
-            print(path)
             image.save(path)
             image_hash = get_image_hash(path)
             return image_name, image.width, image.height, image_hash, sent_image.content_type, path
@@ -55,7 +53,6 @@ class ImageDataController(DataController, ABC):
 
         if existing_image:
             # If the image is not unique (exists in the database), return the existing image object
-            print(f"Image is not unique, returning existing image: {existing_image.id}")
             # easy way, dont like it
             os.remove(image_path)
             return existing_image.copy_with_not_unique()

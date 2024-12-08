@@ -93,9 +93,7 @@ class DataResourceManager:
                 chat_controller.init_controller()
                 DataResourceManager._chat_data_controller = chat_controller
             elif controller_type == 'image' and DataResourceManager._image_data_controller is None:
-                print(app.config["MODULES"]["IMAGE_UPLOAD"]["UPLOAD_DIRECTORY"])
                 image_upload_directory = Path(app.root_path) / Path(app.config["MODULES"]["IMAGE_UPLOAD"]["UPLOAD_DIRECTORY"])
-                print(image_upload_directory)
                 classes_path = Path(app.root_path) / "imagenet_classes.txt"
                 image_controller = SQLite3ImageController(DataResourceManager._db_adaptor, image_upload_directory, ResNetClassifier(class_file=classes_path))
                 image_controller.init_controller()

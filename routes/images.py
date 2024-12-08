@@ -29,12 +29,10 @@ def create_images_blueprint(endpoint):
         # Assuming DataResourceManager saves the image
         image_controller = DataResourceManager.get_image_data_controller(current_app)
         saved_image = image_controller.save_image(image_file, UserContainer(user_id))
-        print(f'Saved image unique: {saved_image.unique}')
 
         # Classify the image if it's new
         if saved_image.unique:
             classified_as = image_controller.classify_image(saved_image.id)
-            print(f'Image classified as: {classified_as}')
 
             return jsonify({
                 "status": "success",

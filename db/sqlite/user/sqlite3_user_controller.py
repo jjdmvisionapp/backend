@@ -46,7 +46,6 @@ class SQLite3UserController(UserDataController):
                 )
             ''')
             conn.commit()
-            print("called init")
 
     def _create_user_impl(self, username: str, email: str, password: str, user_type: str) -> UserContainer:
         try:
