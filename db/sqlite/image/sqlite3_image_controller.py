@@ -12,6 +12,7 @@ from db.types.user.user_container import UserContainer
 
 class SQLite3ImageController(ImageDataController):
 
+
     def __init__(self, sqlite_adaptor: SQLiteDBAdaptor, image_folder_path: Path, classifier: ImageClassifier):
         super().__init__(sqlite_adaptor, image_folder_path, classifier)
         self.image_folder_path = image_folder_path
@@ -101,15 +102,24 @@ class SQLite3ImageController(ImageDataController):
             self._update_image_basics(cursor, image_filename, image_width, image_height, image_hash, image_mime, user_id)
         return True
 
-    def _get_image_from_db(self, user: UserContainer) -> Optional[Image]:
+    def _get_image_from_db(self, column, value) -> Optional[Image]:
         with self.db_adaptor.get_connection() as conn:
             cursor = conn.cursor()
-            query = f'SELECT * FROM {self.image_table_name} WHERE user_id = ? ORDER BY created_at DESC LIMIT 1'
-            row = cursor.execute(query, (user.id,)).fetchone()
+            query = f'SELECT * FROM {self.image_table_name} WHERE {column} = ? ORDER BY created_at DESC LIMIT 1'
+            row = cursor.execute(query, (value,)).fetchone()
             conn.commit()
             if row is None:  # Check if no result was returned
                 return None  # Return None or handle this case as needed
             return Image(row["IMAGE_ID"], row["IMAGE_NAME"], row["IMAGE_WIDTH"], row["IMAGE_HEIGHT"], row["IMAGE_MIME"], row["CLASSIFIED_AS"])
+
+    def _get_image_from_db_id(self, image_id: int) -> Optional[Image]:
+        return self._get_image_from_db("image_id", image_id)
+
+    def _get_image_from_current(self, user: UserContainer) -> Optional[Image]:
+        return self._get_image_from_db("user_id", user.id)
+
+    def _get_image_from_db_by_hash(self, image_hash: str) -> Optional[Image]:
+        return self._get_image_from_db("image_hash", image_hash)
 
     def delete_image(self, image_id: int):
         with self.db_adaptor.get_connection() as conn:

@@ -16,7 +16,8 @@ class Image:
             "width": self.width,
             "height": self.height,
             "mime": self.mime,
-            "classified_as": self.classified_as
+            "classified_as": self.classified_as,
+            "unique": self.unique
         }
     def copy_with_classified_as(self, classified_as: str):
         # Create a copy of the existing Image instance with a new `classified_as` value

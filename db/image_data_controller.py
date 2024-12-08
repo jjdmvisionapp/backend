@@ -19,7 +19,8 @@ from db.sqlite.image.util import get_image_hash
 from db.types.image import Image
 from db.types.user.user_container import UserContainer
 
-#TODO: Refactor to use temp files ideally
+
+# TODO: Refactor to use temp files ideally
 
 class ImageDataController(DataController, ABC):
 
@@ -33,8 +34,8 @@ class ImageDataController(DataController, ABC):
 
     def _write_image(self, sent_image: FileStorage) -> Tuple[str, int, int, str, str]:
         try:
-            format = sent_image.content_type.split('/')[1]
-            image_name = str(uuid.uuid4()) + "." + format
+            extension = sent_image.content_type.split('/')[1]
+            image_name = str(uuid.uuid4()) + "." + extension
             print(sent_image.content_type)
             image = PILImage.open(sent_image.stream)
             path = self.image_folder_path / Path(image_name)
@@ -45,47 +46,79 @@ class ImageDataController(DataController, ABC):
         except PIL.UnidentifiedImageError:
             raise InvalidData("Invalid image file")
 
-        
-
     def save_image(self, image: FileStorage, user: UserContainer) -> Image:
+        # Process the image to get metadata
         image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
-        returned_image = self._save_image_to_db(image_name, image_width, image_width, image_hash, image_mime, user)
-        if not returned_image.unique:
-            os.remove(self.image_folder_path / image_name)
+
+        # Check if the image is unique by checking the hash in the database
+        existing_image = self._get_image_from_db_by_hash(image_hash)
+
+        if existing_image:
+            # If the image is not unique (exists in the database), return the existing image object
+            print(f"Image is not unique, returning existing image: {existing_image.id}")
+            return existing_image
+
+        # Save image to the database and retrieve the saved image object
+        returned_image = self._save_image_to_db(image_name, image_width, image_height, image_hash, image_mime, user)
+
         return returned_image
 
-    def update_image(self, image_id: int, image: FileStorage, user: UserContainer):
-        image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
-        self._update_image_db(image_id, image_name, image_width, image_height, image_hash, image_mime, user)
+    def classify_image(self, image_id: int) -> Optional[str]:
+        # Ensure you retrieve the image correctly from the database using image_id
+        image = self._get_image_from_db_id(image_id)
 
-    @abstractmethod
-    def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Image:
-        pass
+        if image is None:
+            raise ValueError(f"Image with ID {image_id} does not exist.")
 
-    # supports one image per user
-    def classify_image(self, user: UserContainer):
-        image_path, image_id = self.get_image_path(user)
-        if image_path:
-            classified_as = self.image_classifier.predict(image_path)
-            self._update_classified_as(image_id, classified_as)
-            return classified_as
+        # Perform classification (assuming you have an external image classifier)
+        classified_as = self.image_classifier.predict(
+            self.image_folder_path / image.relative_filepath)  # This will depend on your classifier logic
 
-    def get_image_path(self, user: UserContainer):
-        image = self._get_image_from_db(user)
+        # Update the database with the classification result
+        self._update_classified_as(image_id, classified_as)
+
+        return classified_as
+
+    def get_id_image_filepath(self, image_id: int):
+        image = self._get_image_from_db_id(image_id)
+        if image is not None:
+            return self.image_folder_path / image.relative_filepath
+        return None
+
+    def get_current_image_filepath(self, user: UserContainer):
+        image = self._get_image_from_current(user)
         if image is not None:
             return self.image_folder_path / image.relative_filepath, image.id
         return None
-    
+
+    def get_current_image(self, user: UserContainer) -> Optional[FileStorage]:
+        return self._get_image_from_current(user)
+
+    def get_image_from_id(self, image_id: int) -> Optional[FileStorage]:
+        return self._get_image_from_db_id(image_id)
+
     @abstractmethod
     def _update_classified_as(self, image_id, classified_as):
         pass
 
     @abstractmethod
-    def _get_image_from_db(self, user: UserContainer) -> Optional[Image]:
+    def _get_image_from_current(self, user: UserContainer) -> Optional[Image]:
         pass
 
     @abstractmethod
-    def _update_image_db(self, image_id, image_filename, image_width, image_height, image_hash, image_mime, user: UserContainer) -> Optional[str]:
+    def _get_image_from_db_id(self, image_id: int) -> Optional[Image]:
+        pass
+
+    @abstractmethod
+    def _get_image_from_db_by_hash(self, image_hash: str) -> Optional[Image]:
+        """
+        Helper method to check if an image with the same hash already exists in the database.
+        """
+        pass
+
+    @abstractmethod
+    def _save_image_to_db(self, image_filename, image_width, image_height, image_hash, image_mime,
+                          user: UserContainer) -> Image:
         pass
 
     @abstractmethod
