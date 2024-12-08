@@ -5,6 +5,7 @@ from typing import Callable, Tuple, Dict
 from flask import Flask
 
 from chatbots.huggingface.flan_t5_chatbot import FlanT5ChatBot
+from classifiers.resnet import ResNetClassifier
 from db.chat_data_controller import ChatDataController
 from db.image_data_controller import ImageDataController
 from db.sqlite.chat.sqlite3_chat_controller import SQLite3ChatController
@@ -92,8 +93,12 @@ class DataResourceManager:
                 chat_controller.init_controller()
                 DataResourceManager._chat_data_controller = chat_controller
             elif controller_type == 'image' and DataResourceManager._image_data_controller is None:
-                path = Path(app.root_path) / Path(app.config["UPLOAD_DIRECTORY"])
-                image_controller = SQLite3ImageController(DataResourceManager._db_adaptor, path)
+                print(app.config["MODULES"]["IMAGE_UPLOAD"]["UPLOAD_DIRECTORY"])
+                image_upload_directory = Path(app.root_path) / Path(app.config["MODULES"]["IMAGE_UPLOAD"]["UPLOAD_DIRECTORY"])
+                print(image_upload_directory)
+                classes_path = Path(app.root_path) / "imagenet_classes.txt"
+                image_controller = SQLite3ImageController(DataResourceManager._db_adaptor, image_upload_directory, ResNetClassifier(class_file=classes_path))
+                image_controller.init_controller()
                 DataResourceManager._image_data_controller = image_controller
             return {
                 'user': DataResourceManager._user_data_controller,

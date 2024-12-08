@@ -8,7 +8,7 @@
   },
   "MODULES": {
     "IMAGE_UPLOAD": {
-      "UPLOAD_DIRECTORY": "/images",
+      "UPLOAD_DIRECTORY": "images",
       "MAX_FILE_SIZE": 5192
     },
     "IMAGE_RECOGNITION": {
