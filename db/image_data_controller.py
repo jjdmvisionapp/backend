@@ -32,7 +32,7 @@ class ImageDataController(DataController, ABC):
     def init_controller(self):
         os.makedirs(self.image_folder_path, exist_ok=True)
 
-    def _write_image(self, sent_image: FileStorage) -> Tuple[str, int, int, str, str]:
+    def _write_image(self, sent_image: FileStorage) -> Tuple[str, int, int, str, str, Path]:
         try:
             extension = sent_image.content_type.split('/')[1]
             image_name = str(uuid.uuid4()) + "." + extension
@@ -42,13 +42,13 @@ class ImageDataController(DataController, ABC):
             print(path)
             image.save(path)
             image_hash = get_image_hash(path)
-            return image_name, image.width, image.height, image_hash, sent_image.content_type
+            return image_name, image.width, image.height, image_hash, sent_image.content_type, path
         except PIL.UnidentifiedImageError:
             raise InvalidData("Invalid image file")
 
     def save_image(self, image: FileStorage, user: UserContainer) -> Image:
         # Process the image to get metadata
-        image_name, image_width, image_height, image_hash, image_mime = self._write_image(image)
+        image_name, image_width, image_height, image_hash, image_mime, image_path = self._write_image(image)
 
         # Check if the image is unique by checking the hash in the database
         existing_image = self._get_image_from_db_by_hash(image_hash)
@@ -56,7 +56,9 @@ class ImageDataController(DataController, ABC):
         if existing_image:
             # If the image is not unique (exists in the database), return the existing image object
             print(f"Image is not unique, returning existing image: {existing_image.id}")
-            return existing_image
+            # easy way, dont like it
+            os.remove(image_path)
+            return existing_image.copy_with_not_unique()
 
         # Save image to the database and retrieve the saved image object
         returned_image = self._save_image_to_db(image_name, image_width, image_height, image_hash, image_mime, user)

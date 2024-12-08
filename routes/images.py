@@ -30,7 +30,7 @@ def create_images_blueprint(endpoint):
         saved_image = image_controller.save_image(image_file, UserContainer(user_id))
         print(f'Saved image unique: {saved_image.unique}')
 
-        # If image is unique, classify it
+        # Classify the image if it's new
         if saved_image.unique:
             classified_as = image_controller.classify_image(saved_image.id)
             print(f'Image classified as: {classified_as}')
