@@ -1,9 +1,10 @@
-from flask import Blueprint, current_app, request, jsonify, session, send_file, g
+from flask import Blueprint, current_app, request, jsonify, send_file, g
 from flask_cors import cross_origin
+
 from app.data_resource_manager import DataResourceManager
-from app.exceptions.invalid_data import InvalidData
 from db.types.user.user_container import UserContainer
 from routes.util import login_required
+
 
 # chatgpt helped
 def create_images_blueprint(endpoint):

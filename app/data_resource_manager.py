@@ -17,8 +17,8 @@ from db.user_data_controller import UserDataController
 
 def _chatbot_not_ready(json: Dict[str, str]) -> Tuple[Dict[str, str], int, int]:
     return {
-        "hi": "hi"
-    }, 0, 0
+        "error": "Chatbot is not ready yet!"
+    }, -1, -1
 
 
 # ChatGPT simplified

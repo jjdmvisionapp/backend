@@ -19,10 +19,8 @@ def create_chat_blueprint(blueprint):
             chat_controller = DataResourceManager.get_chat_data_controller(current_app)
             user = UserContainer(user_id)
 
-            # Load chat messages
             chat_messages = chat_controller.load_chat_messages(user)
 
-            # Convert messages to dictionaries
             messages_dict = [
                 {
                     "id": chat.message_id,
@@ -35,7 +33,6 @@ def create_chat_blueprint(blueprint):
                 for chat in chat_messages
             ]
 
-            # Return as JSON response
             return jsonify({"status": "success", "messages": messages_dict}), 200
 
     return chat_blueprint

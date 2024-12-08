@@ -73,7 +73,7 @@ class SQLite3ImageController(ImageDataController):
         except sqlite3.IntegrityError as e:
             # Handle database integrity errors if needed
             image_id = None  # Assign a default or error value
-            return Image(image_id, image_filename, image_width, image_height, image_mime, None, False)
+            return Image(image_id, image_filename, image_width, image_height, image_mime, image_hash, False)
 
     def _update_image_basics(self, cursor, image_filename, image_width, image_height, image_hash, image_mime, user_id):
         query_update = f'''

@@ -1,8 +1,6 @@
 from abc import abstractmethod, ABC
 from typing import List, Tuple, Dict, Any
 
-from flask import current_app
-from flask_socketio import emit
 from chatbots.chatbot_controller import ChatBotController
 from db.data_controller import DataController
 from db.db_adaptor import DBAdaptor
@@ -20,10 +18,9 @@ class ChatDataController(DataController, ABC):
 
     def chat_callback(self, data: Dict[str, Any]) -> Tuple[Dict[str, str], int, int]:
         """
-        Processes incoming chat data and returns a tuple containing the message dictionary,
-        the sender's user ID, and the recipient's user ID.
+        Chat callback for the websocket chatbot
         """
-        print("yo")
+        from_user_id = 0
         try:
             # Extract data from the incoming WebSocket message
             message = data.get('message')
@@ -45,8 +42,6 @@ class ChatDataController(DataController, ABC):
                 # Save the user's message and chatbot's response in the database
                 user_message = self._save_chat_message_impl(chatbot, user, message, 'user')
                 bot_message = self._save_chat_message_impl(user, chatbot, chatbot_response, 'bot')
-                print(bot_message.to_dict(), from_user_id, self.CHATBOT_ID)
-
                 # Return the chatbot's response message
                 return bot_message.to_dict(), from_user_id, self.CHATBOT_ID
             else:
@@ -60,13 +55,10 @@ class ChatDataController(DataController, ABC):
         except Exception as e:
             # Handle any exceptions by returning an error message
             error_message = {"status": "error", "message": str(e)}
-            return error_message, -1, -1  # Use -1 as a placeholder for user IDs in case of error
+            return error_message, -1, from_user_id  # Use -1 as a placeholder for user IDs in case of error
 
     def init_controller(self):
         from app.data_resource_manager import DataResourceManager
-        """
-        Initialize the chat data controller and register its callback.
-        """
         DataResourceManager.change_chat_callback(self.chat_callback)
 
     @abstractmethod

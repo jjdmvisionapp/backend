@@ -7,6 +7,7 @@ from torchvision import models, transforms
 from classifiers.image_classifier import ImageClassifier
 
 
+# From the labs
 class ResNetClassifier(ImageClassifier):
 
     def __init__(self, class_file: Path):
