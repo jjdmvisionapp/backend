@@ -17,7 +17,8 @@ Run `jjdmvision.py` to start the server.
 *It is advised to use Python 3.12 for the minute to prevent issues with packages.*
 
 Please bring your own Hugging Face access token, and drop it in the labelled place in `config.json`.
-You should be able to use the Pipfile to get these all installed easily:
+
+For the dependencies, you should be able to use the Pipfile to get these all installed easily:
 1. Install pipenv using `pip install pipenv` (on Python 3.12.7, it's installed but does not work unless you re-install it for some reason sometimes)
 2. Then, in this directory, run `pipenv install`
 3. And finally, do `pipenv run python jjdmvision.py`
